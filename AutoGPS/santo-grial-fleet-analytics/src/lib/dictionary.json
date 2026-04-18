@@ -1,0 +1,423 @@
+{
+  "geocercas": [
+    "01-ECO-GIRALDAS",
+    "02-ECO-SUNUAPA",
+    "03-ECO CACTUS IV",
+    "04-BSE-CACTUS I",
+    "05-ECO JUJO",
+    "06-ECO-TECOMINOACAN",
+    "07-ECO-BELLOTA",
+    "08-DES-SAMARIA II",
+    "09-ECO-RABASA",
+    "11-BSE-AGAVE",
+    "APBJ-01-ECO-PAR",
+    "APBJ-02-ECO-TCM",
+    "APBJ-02-ECO-TCM, 06-ECO-TECOMINOACAN",
+    "APBJ-03-BSE-BEL",
+    "APBJ-04-BSE-CNT",
+    "APBJ-07-BSE-PAR",
+    "APBJ-12-ECO-CAS",
+    "APBJ-14-ECO-JUJO",
+    "APCP-01-B&C-BLA",
+    "APCP-02-ECO-CP1",
+    "APCP-03-B&C-GUA",
+    "APMM-01-BSE-AGV",
+    "APMM-02-BSE-CA1",
+    "APSL-01-BSE-CND",
+    "APSL-02-CAB-CND",
+    "APSL-03-BSE-OXI",
+    "Oficina Comalcalco",
+    "Oficina Mapachapa",
+    "Oficina Minatitlán",
+    "SFG-C183-MB2",
+    "SFG-C192-MSA",
+    "SFG-C194-VME",
+    "SFG-C197-MRC",
+    "SFG-C221-TEP",
+    "SFG-C223-MAC",
+    "SFG-C230-MCH",
+    "SFG-C240-LAG",
+    "SFG-C243-SNS",
+    "SFG-C245-MSA",
+    "SFG-C250-BDH",
+    "SFG-C251-CHN",
+    "SFG-C252-CLN",
+    "SFG-C253-OBR",
+    "SFG-C254-RIO",
+    "SFG-C255-VER",
+    "SFG-C258-ASK",
+    "SFG-C259-LVT",
+    "SFG-C261-RCF",
+    "SFG-C262-OG2"
+  ],
+  "vehiculos": [
+    "FORD F-150 BLANCO OXFORD",
+    "FORD F-350 BLANCO OXFORD",
+    "FORD RANGER AZUL",
+    "FORD RANGER AZUL RELAMPAGO",
+    "FORD RANGER BLANCO",
+    "FORD RANGER BLANCO NIEVE",
+    "FORD RANGER GRIS MERCURIO",
+    "FORD RANGER NEGRO APERLADO",
+    "FORD RANGER PLATA",
+    "FORD RANGER ROJO CEREZA",
+    "FORD RANGER ROJO MEXICANO",
+    "FORD RANGER XL AZUL RELAMPAGO",
+    "FORD RANGER XL BLANCO NIEVE",
+    "FORD RANGER XLT",
+    "FORD RANGER XLT BLANCO NIEVE",
+    "FORD TRANSIT BLANCO",
+    "FORD TRANSIT BLANCO NIEVE",
+    "Ford Ranger XL Azul relampago",
+    "MITSUBISHI L200 Withe Solid",
+    "Mitsubishi L200 White solid",
+    "NISSAN NP300 BLANCO",
+    "RANGER BLANCO NIEVE",
+    "TOYOTA HIACE",
+    "TOYOTA HILUX BLANCO",
+    "TOYOTA HILUX GRIS",
+    "VOLKSWAGEN VIRTUS BLANCO CANDY"
+  ],
+  "placas": [
+    "NBM785C",
+    "XH5164B",
+    "XH5279B",
+    "XM6772A",
+    "XM6773A",
+    "XM6775A",
+    "XM6777A",
+    "XP0337B",
+    "XP0443B",
+    "XP0446B",
+    "XP0447B",
+    "XP0502B",
+    "XR3112B",
+    "XR6245A",
+    "XR6246A",
+    "XR6616A",
+    "XS2534B",
+    "XS2636B",
+    "XS2637B",
+    "XS2638B",
+    "XT1304B",
+    "XT1305B",
+    "XT1306B",
+    "XU0933B",
+    "XU0936B",
+    "XW0747A",
+    "XW0749A",
+    "XW8977A",
+    "XW8993A",
+    "XY4793A",
+    "YDP622B",
+    "YH6813A",
+    "YH6828A",
+    "YH6843A",
+    "YH6844A",
+    "YH6845A",
+    "YH6862A",
+    "YH6887A",
+    "YH6888A",
+    "YH7798A",
+    "YH7799A",
+    "YHG998B",
+    "YJ6385A",
+    "YLN142A",
+    "YLN739A",
+    "Z54BPL",
+    "Z56BPL",
+    "Z60BPL"
+  ],
+  "consecutivos": [
+    "AVH-018",
+    "AVH-019",
+    "AVH-021",
+    "AVH-022",
+    "AVH-023",
+    "AVH-024",
+    "AVH-025",
+    "AVH-026",
+    "AVH-027",
+    "AVH-028",
+    "AVH-029",
+    "AVH-032",
+    "AVH-033",
+    "AVH-034",
+    "AVH-035",
+    "AVH-036",
+    "AVH-037",
+    "AVH-038",
+    "AVH-039",
+    "AVH-040",
+    "AVH-041",
+    "AVH-044",
+    "AVH-045",
+    "AVH-046",
+    "AVH-047",
+    "AVH-048",
+    "AVH-049",
+    "AVH-050",
+    "AVH-051",
+    "AVH-052",
+    "F&G-005",
+    "F&G-006",
+    "F&G-011",
+    "F&G-012",
+    "F&G-013",
+    "F&G-015",
+    "F&G-016",
+    "F&G-017",
+    "F&G-018",
+    "F&G-020",
+    "F&G-021",
+    "F&G-022",
+    "F&G-023",
+    "F&G-024",
+    "F&G-027",
+    "F&G-028",
+    "VSI-028",
+    "VSI-029"
+  ],
+  "unidadesRelacionales": [
+    {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT"
+    },
+    {
+      "Placas": "XP0446B",
+      "Consecutivo": "F&G-015",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XT1306B",
+      "Consecutivo": "AVH-052",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO"
+    },
+    {
+      "Placas": "XW0747A",
+      "Consecutivo": "AVH-026",
+      "Vehículo": "NISSAN NP300 BLANCO"
+    },
+    {
+      "Placas": "XW0749A",
+      "Consecutivo": "AVH-027",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE"
+    },
+    {
+      "Placas": "XW8977A",
+      "Consecutivo": "AVH-028",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO"
+    },
+    {
+      "Placas": "YDP622B",
+      "Consecutivo": "F&G-005",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD"
+    },
+    {
+      "Placas": "YH6887A",
+      "Consecutivo": "AVH-039",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA"
+    },
+    {
+      "Placas": "YHG998B",
+      "Consecutivo": "F&G-006",
+      "Vehículo": ""
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
+    }
+  ]
+}
