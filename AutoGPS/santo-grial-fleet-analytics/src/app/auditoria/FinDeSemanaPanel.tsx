@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
 import { analyzeWeekendUsage, WeekendUsageReport } from "@/lib/weekendAnalyzer";
-import { Calendar, AlertTriangle, Car, Moon, Download, Search, MapPin, Clock, ChevronRight, Printer, FileSpreadsheet, X } from "lucide-react";
+import { Calendar, AlertTriangle, Car, Moon, Download, Search, MapPin, Clock, ChevronRight, Printer, FileSpreadsheet, X, Presentation } from "lucide-react";
+import { generateWeekendPptxReport } from "@/lib/weekendPptxGenerator";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 
 export function FinDeSemanaPanel() {
@@ -13,6 +14,8 @@ export function FinDeSemanaPanel() {
   const [localTo, setLocalTo] = useState<string>("");
   const [isExporting, setIsExporting] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [isGeneratingPptx, setIsGeneratingPptx] = useState(false);
+  const [showPptxPreviewModal, setShowPptxPreviewModal] = useState(false);
 
   // Initialize dates when data loads
   useEffect(() => {
@@ -64,6 +67,21 @@ export function FinDeSemanaPanel() {
       alert("No se pudo generar el Excel");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportPptx = async () => {
+    if (!weekendReport || filteredProfiles.length === 0) return;
+    setIsGeneratingPptx(true);
+    try {
+      await generateWeekendPptxReport(
+        filteredProfiles, 
+        localFrom, 
+        localTo, 
+        `Top10_FinesDeSemana_${new Date().getTime()}.pptx`
+      );
+    } finally {
+      setIsGeneratingPptx(false);
     }
   };
 
@@ -165,15 +183,24 @@ export function FinDeSemanaPanel() {
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto pb-20">
       
-      {/* Botón exportar */}
-      <div className="flex justify-end">
+      {/* Botones exportar */}
+      <div className="flex justify-end gap-3">
         <button 
           onClick={() => setShowPreviewModal(true)}
           disabled={isExporting}
+          className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50 border border-zinc-700"
+        >
+          <FileSpreadsheet className="w-4 h-4 text-green-500" />
+          {isExporting ? 'Generando...' : 'Vista Previa Excel'}
+        </button>
+
+        <button 
+          onClick={() => setShowPptxPreviewModal(true)}
+          disabled={isGeneratingPptx}
           className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-black px-5 py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50 shadow-lg shadow-orange-600/20"
         >
-          <Download className="w-4 h-4" />
-          {isExporting ? 'Generando...' : 'Exportar .xlsx'}
+          <Presentation className="w-4 h-4" />
+          {isGeneratingPptx ? 'Generando...' : 'Vista Previa PPTX'}
         </button>
       </div>
 
@@ -329,8 +356,7 @@ export function FinDeSemanaPanel() {
                          fill="#ea580c" 
                          radius={[0, 6, 6, 0]} 
                          barSize={24}
-                         className="cursor-pointer hover:opacity-80 transition-opacity"
-                         onClick={(data) => {
+                         onClick={(data: any) => {
                            if(data && data.vehiculoId) {
                              setWeekendFilter({ searchQuery: data.vehiculoId });
                              window.scrollTo({ top: 300, behavior: 'smooth' }); // Pequeño scroll hacia los KPIs
@@ -551,6 +577,99 @@ export function FinDeSemanaPanel() {
               >
                 <FileSpreadsheet className="w-5 h-5" />
                 Descargar Documento Maestro (.xlsx)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL VISTA PREVIA PPTX FLOTANTE */}
+      {showPptxPreviewModal && weekendReport && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0a0a0a] border border-zinc-800 rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-[#050505]">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Presentation className="w-5 h-5 text-orange-500" /> Vista Previa del PPTX (Top 10 Fines de Semana)
+                </h3>
+                <p className="text-xs text-zinc-500">Muestra aproximada de cómo se verán las diapositivas generadas (Formato 16:9).</p>
+              </div>
+              <button 
+                onClick={() => setShowPptxPreviewModal(false)}
+                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body - Canvas de PPTX */}
+            <div className="flex-1 overflow-auto p-8 bg-zinc-950 flex flex-col items-center gap-12 custom-scrollbar">
+              
+              {/* SLIDE 1: PORTADA */}
+              <div className="w-[800px] aspect-video bg-white shadow-lg relative flex flex-col items-center justify-center border border-zinc-200 shrink-0">
+                <div className="absolute top-2 left-0 w-full h-1 bg-[#C00000]"></div>
+                <h1 className="text-4xl font-bold text-[#19426B] font-['Verdana'] mb-4 text-center">Hallazgos – Uso en Fines de Semana</h1>
+                <p className="text-2xl text-[#595959] font-['Verdana'] mb-2">Período Evaluado: {(localFrom && localTo) ? `${localFrom} al ${localTo}` : "Histórico completo"}</p>
+                <p className="text-lg text-[#C00000] font-['Verdana'] font-bold">Top 10 Usuarios de Mayor Riesgo</p>
+                <div className="absolute bottom-2 left-4 text-[10px] text-[#595959]">Reporte generado por AnalyticsGPS - {new Date().toLocaleDateString()}</div>
+                <div className="absolute bottom-2 right-4 text-[10px] text-[#595959]">Pág. 1</div>
+              </div>
+
+              {/* SLIDE 2: TOP 10 USUARIOS */}
+              <div className="w-[800px] aspect-video bg-white shadow-lg relative flex flex-col border border-zinc-200 p-8 shrink-0">
+                <div className="absolute top-2 left-0 w-full h-1 bg-[#C00000]"></div>
+                <h2 className="text-3xl font-bold text-[#19426B] font-['Verdana'] mb-4">Top 10: Usuarios Fines de Semana</h2>
+                
+                <table className="w-full text-left text-[11px] border-collapse mt-2">
+                  <thead>
+                    <tr className="bg-[#19426B] text-white">
+                      <th className="p-2 border border-[#BFBFBF] text-center">Posición</th>
+                      <th className="p-2 border border-[#BFBFBF]">Vehículo / Matrícula</th>
+                      <th className="p-2 border border-[#BFBFBF]">Conductor</th>
+                      <th className="p-2 border border-[#BFBFBF] bg-[#C00000] text-center">Eventos Fin de Semana</th>
+                      <th className="p-2 border border-[#BFBFBF]">Ubicación Principal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProfiles.slice(0, 10).map((u, i) => (
+                      <tr key={i}>
+                        <td className="p-2 border border-[#BFBFBF] text-black text-center font-bold">#{i + 1}</td>
+                        <td className="p-2 border border-[#BFBFBF] text-black">{u.vehiculo} <br/><span className="text-zinc-500 text-[9px]">{u.matricula}</span></td>
+                        <td className="p-2 border border-[#BFBFBF] text-black">{u.conductor}</td>
+                        <td className="p-2 border border-[#BFBFBF] text-[#C00000] text-center font-bold">{u.totalEvents}</td>
+                        <td className="p-2 border border-[#BFBFBF] text-black truncate max-w-[200px]">{u.topRoutes[0]?.direccion || "N/A"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                <div className="absolute inset-0 bg-white/30 flex items-center justify-center backdrop-blur-[1px] pointer-events-none">
+                  <span className="bg-[#19426B] text-white px-4 py-2 rounded-full font-bold shadow-lg text-sm">El archivo final además generará 1 hoja de detalle para cada usuario del Top 3</span>
+                </div>
+
+                <div className="absolute bottom-2 left-4 text-[10px] text-[#595959]">Reporte generado por AnalyticsGPS - {new Date().toLocaleDateString()}</div>
+                <div className="absolute bottom-2 right-4 text-[10px] text-[#595959]">Pág. 2</div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-zinc-800 flex justify-end gap-3 bg-[#050505]">
+              <button 
+                onClick={() => setShowPptxPreviewModal(false)}
+                className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                Cerrar
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPptxPreviewModal(false);
+                  handleExportPptx();
+                }}
+                className="px-6 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-orange-900/20"
+              >
+                <Presentation className="w-4 h-4" /> Exportar a PPTX Ahora
               </button>
             </div>
           </div>

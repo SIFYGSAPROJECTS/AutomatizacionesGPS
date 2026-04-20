@@ -67,11 +67,73 @@ function normalizeAddress(addr: string): string {
   return addr.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function parseDurationToSeconds(durStr: string): number {
+export function parseDurationToSeconds(durStr: string): number {
   if (!durStr) return 0;
-  const match = durStr.match(/(\d+):(\d+):(\d+(?:\.\d+)?)/);
-  if (!match) return 0;
-  return parseInt(match[1] || "0", 10) * 3600 + parseInt(match[2] || "0", 10) * 60 + parseFloat(match[3] || "0");
+  const s = durStr.trim().toLowerCase();
+  
+  let days = 0;
+  let timeStr = s;
+  const dayMatch = s.match(/^(\d+)\s*(?:d|day|days|días|dias)\s*(.*)$/);
+  if (dayMatch) {
+    days = parseInt(dayMatch[1], 10);
+    timeStr = dayMatch[2].trim();
+  }
+  
+  const textMatch = timeStr.match(/(?:(\d+)\s*h\w*)?\s*(?:(\d+)\s*m\w*)?\s*(?:(\d+(?:\.\d+)?)\s*s\w*)?/);
+  if (textMatch && (textMatch[1] || textMatch[2] || textMatch[3]) && !timeStr.includes(':')) {
+    const h = parseInt(textMatch[1] || "0", 10);
+    const m = parseInt(textMatch[2] || "0", 10);
+    const sec = parseFloat(textMatch[3] || "0");
+    return (days * 86400) + (h * 3600) + (m * 60) + sec;
+  }
+  
+  const parts = timeStr.split(':').map(p => parseFloat(p) || 0);
+  if (parts.length === 3) {
+    return (days * 86400) + (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+  } else if (parts.length === 2) {
+    return (days * 86400) + (parts[0] * 3600) + (parts[1] * 60); 
+  } else if (parts.length === 1) {
+    return (days * 86400) + parts[0];
+  }
+  return 0;
+}
+
+export function parseDateRobust(dateStr: string): Date {
+  if (!dateStr) return new Date(NaN);
+  let d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  
+  const match = dateStr.trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const year = parseInt(match[3], 10);
+    const h = parseInt(match[4], 10);
+    const m = parseInt(match[5], 10);
+    const s = match[6] ? parseInt(match[6], 10) : 0;
+    return new Date(year, month, day, h, m, s);
+  }
+  return new Date("Invalid");
+}
+
+function getStopDurationSeconds(row: Record<string, string>): number {
+  const durStr = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado", "Duración", "Duracion", "duracion");
+  if (durStr) {
+    const parsed = parseDurationToSeconds(durStr);
+    if (parsed > 0) return parsed;
+  }
+  
+  const hInicio = getField(row, "Hora inicial ", "Hora inicial", "hora inicial", "Inicio");
+  const hFinal = getField(row, "Hora final ", "Hora final", "hora final", "Fin", "Final");
+  
+  if (hInicio && hFinal) {
+    const t1 = parseDateRobust(hInicio).getTime();
+    const t2 = parseDateRobust(hFinal).getTime();
+    if (!isNaN(t1) && !isNaN(t2) && t2 > t1) {
+      return (t2 - t1) / 1000;
+    }
+  }
+  return 0;
 }
 
 const OFFICIAL_KEYWORDS = ["oficina", "base", "taller", "almacén", "almacen", "bodega"];
@@ -104,8 +166,7 @@ export function profileStops(rawData: RawTelemetryRow[]): StopProfileReport {
     const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
     const conductor = getField(row, "Conductor", "conductor").trim() || "Desconocido";
     const geocerca = getField(row, "Geocercas", "geocercas").trim();
-    const tiempoAparcado = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado");
-    const secs = parseDurationToSeconds(tiempoAparcado);
+    const secs = getStopDurationSeconds(row);
 
     const addressKey = normalizeAddress(direccion);
     const hora = eventDate.getHours();

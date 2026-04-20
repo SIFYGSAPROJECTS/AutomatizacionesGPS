@@ -9,6 +9,7 @@ import { format, differenceInDays } from "date-fns";
 import dictionary from "@/lib/dictionary.json";
 import { useFleetStore } from "@/store/useFleetStore";
 import { useAnalysisHistory } from "@/hooks/useAnalysisHistory";
+import { importRawTelemetry } from "@/lib/db";
 
 export function CsvUploader() {
   const [dragActive, setDragActive] = useState(false);
@@ -45,9 +46,25 @@ export function CsvUploader() {
     Papa.parse<RawTelemetryRow>(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        // Guardamos en memoria temporal global
-        useFleetStore.setState({ rawParsedData: results.data });
+      complete: async (results) => {
+        setIsProcessing(true);
+        try {
+          console.log("Iniciando inyección masiva en IndexedDB...");
+          await importRawTelemetry(results.data as Record<string, string>[]);
+          console.log("Inyección completada.");
+          
+          await useFleetStore.getState().scanAvailableMonths();
+          
+          const range = useFleetStore.getState().globalDateRange;
+          if (range) {
+            await useFleetStore.getState().loadDataFromDb(range.from, range.to);
+          }
+        } catch (e) {
+          console.error("Error importando a DB:", e);
+          alert("Hubo un error guardando los datos en la base de datos local.");
+        } finally {
+          setIsProcessing(false);
+        }
       },
     });
   };
@@ -479,59 +496,101 @@ export function CsvUploader() {
              </form>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-[#050505] shadow-xl">
+          {/* VISTA DESKTOP: Tabla auto-layout, columnas se ajustan al contenido */}
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-800 bg-[#050505] shadow-xl">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-zinc-400 bg-[#0a0a0a] border-b border-zinc-800">
+              <thead className="text-[10px] text-zinc-500 bg-[#0a0a0a] border-b border-zinc-800 uppercase tracking-widest">
                 <tr>
-                  <th className="px-4 py-4 font-medium uppercase tracking-widest text-[#a1a1aa]">Geocerca</th>
-                  <th className="px-4 py-4 font-medium uppercase tracking-widest text-[#a1a1aa]">Placas</th>
-                  <th className="px-4 py-4 font-medium hidden sm:table-cell uppercase tracking-widest text-[#a1a1aa]">Consecutivo</th>
-                  <th className="px-4 py-4 font-medium hidden lg:table-cell uppercase tracking-widest text-[#a1a1aa]">Vehículo</th>
-                  <th className="px-4 py-4 font-medium uppercase tracking-widest text-[#a1a1aa]">Inicio</th>
-                  <th className="px-4 py-4 font-medium uppercase tracking-widest text-[#a1a1aa]">Fin</th>
-                  <th className="px-4 py-4 font-medium uppercase tracking-widest text-[#a1a1aa]">Periodo</th>
-                  <th className="px-4 py-4 font-medium text-center uppercase tracking-widest text-[#a1a1aa]">Días asis.</th>
-                  <th className="px-4 py-4 font-medium text-center uppercase tracking-widest text-[#a1a1aa]">Días cal.</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Geocerca</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Placas</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Consecutivo</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Vehículo</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Inicio</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Fin</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Periodo</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center">Días Asis.</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center">Días Cal.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
                 {streakReport.map((row, i) => (
-                  <tr key={i} className="hover:bg-zinc-900 transition-colors text-zinc-300 group">
-                    <td className="px-2 py-2 font-medium text-orange-500">
-                      <input list="geocercas-list" value={row.Geocerca} onChange={(e) => handleCellEdit(i, 'Geocerca', e.target.value)} className="w-full bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all" />
+                  <tr key={i} className="hover:bg-zinc-900/70 transition-colors text-zinc-300">
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input list="geocercas-list" value={row.Geocerca} onChange={(e) => handleCellEdit(i, 'Geocerca', e.target.value)} size={Math.max(row.Geocerca.length, 12)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-orange-500 font-medium text-sm" />
                     </td>
-                    <td className="px-2 py-2 whitespace-nowrap">
-                      <input list="placas-list" value={row.Placas} onChange={(e) => handleCellEdit(i, 'Placas', e.target.value)} className="w-24 bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input list="placas-list" value={row.Placas} onChange={(e) => handleCellEdit(i, 'Placas', e.target.value)} size={Math.max(row.Placas.length, 8)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-sm" />
                     </td>
-                    <td className="px-2 py-2 whitespace-nowrap hidden sm:table-cell text-zinc-500">
-                      <input list="consecutivos-list" value={row.Consecutivo} onChange={(e) => handleCellEdit(i, 'Consecutivo', e.target.value)} className="w-20 bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input list="consecutivos-list" value={row.Consecutivo} onChange={(e) => handleCellEdit(i, 'Consecutivo', e.target.value)} size={Math.max(row.Consecutivo.length, 8)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-zinc-500 text-sm" />
                     </td>
-                    <td className="px-2 py-2 hidden lg:table-cell text-zinc-400">
-                      <input list="vehiculos-list" value={row.Vehículo} onChange={(e) => handleCellEdit(i, 'Vehículo', e.target.value)} className="w-full bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input list="vehiculos-list" value={row.Vehículo} onChange={(e) => handleCellEdit(i, 'Vehículo', e.target.value)} size={Math.max(row.Vehículo.length, 12)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-zinc-400 text-sm" />
                     </td>
-                    <td className="px-2 py-2">
-                      <input type="date" value={row.Inicio} onChange={(e) => handleCellEdit(i, 'Inicio', e.target.value)} className="w-32 bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-xs css-date-picker" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input type="date" value={row.Inicio} onChange={(e) => handleCellEdit(i, 'Inicio', e.target.value)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-sm css-date-picker" />
                     </td>
-                    <td className="px-2 py-2">
-                       <input type="date" value={row.Fin} onChange={(e) => handleCellEdit(i, 'Fin', e.target.value)} className="w-32 bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-xs css-date-picker" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input type="date" value={row.Fin} onChange={(e) => handleCellEdit(i, 'Fin', e.target.value)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-sm css-date-picker" />
                     </td>
-                    <td className="px-2 py-2 text-zinc-400 text-xs whitespace-nowrap hidden md:table-cell">
-                      <input value={row.Periodo} onChange={(e) => handleCellEdit(i, 'Periodo', e.target.value)} className="w-full bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all" />
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <input value={row.Periodo} onChange={(e) => handleCellEdit(i, 'Periodo', e.target.value)} size={Math.max(row.Periodo.length, 15)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-zinc-400 text-sm" />
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <div className="flex justify-center">
-                        <input type="number" value={row["Días asistidos"]} onChange={(e) => handleCellEdit(i, 'Días asistidos', parseInt(e.target.value) || 0)} className="w-12 text-center bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded py-1 transition-all text-orange-500 font-semibold text-xs" />
-                      </div>
+                    <td className="px-4 py-2.5 text-center whitespace-nowrap">
+                      <input type="number" value={row["Días asistidos"]} onChange={(e) => handleCellEdit(i, 'Días asistidos', parseInt(e.target.value) || 0)} className="w-14 text-center bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded py-1 transition-all text-orange-500 font-bold text-sm" />
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <div className="flex justify-center">
-                        <input type="number" value={row["Días calendario"]} onChange={(e) => handleCellEdit(i, 'Días calendario', parseInt(e.target.value) || 0)} className="w-12 text-center bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded py-1 transition-all text-zinc-300 font-semibold text-xs" />
-                      </div>
+                    <td className="px-4 py-2.5 text-center whitespace-nowrap">
+                      <input type="number" value={row["Días calendario"]} onChange={(e) => handleCellEdit(i, 'Días calendario', parseInt(e.target.value) || 0)} className="w-14 text-center bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded py-1 transition-all text-zinc-300 font-bold text-sm" />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* VISTA MOBILE: Cards apiladas */}
+          <div className="md:hidden space-y-3">
+            {streakReport.map((row, i) => (
+              <div key={i} className="bg-[#0a0a0a] border border-zinc-800 rounded-xl p-4 space-y-3 hover:border-orange-500/30 transition-colors">
+                {/* Geocerca + badges días */}
+                <div className="flex items-start justify-between gap-2">
+                  <input list="geocercas-list" value={row.Geocerca} onChange={(e) => handleCellEdit(i, 'Geocerca', e.target.value)} className="flex-1 bg-transparent text-orange-500 font-semibold text-sm outline-none border-b border-transparent focus:border-orange-500/50 pb-0.5" />
+                  <div className="flex gap-1.5 shrink-0">
+                    <span className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded font-mono font-bold">{row["Días asistidos"]}d</span>
+                    <span className="text-[10px] bg-zinc-900 text-zinc-400 border border-zinc-800 px-2 py-0.5 rounded font-mono">{row["Días calendario"]}cal</span>
+                  </div>
+                </div>
+                {/* Placas + Consecutivo + Vehículo */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">Placas</p>
+                    <input list="placas-list" value={row.Placas} onChange={(e) => handleCellEdit(i, 'Placas', e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-orange-500/50" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">Consecutivo</p>
+                    <input list="consecutivos-list" value={row.Consecutivo} onChange={(e) => handleCellEdit(i, 'Consecutivo', e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-400 outline-none focus:border-orange-500/50" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">Vehículo</p>
+                    <input list="vehiculos-list" value={row.Vehículo} onChange={(e) => handleCellEdit(i, 'Vehículo', e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-400 outline-none focus:border-orange-500/50" />
+                  </div>
+                </div>
+                {/* Fechas */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">Inicio</p>
+                    <input type="date" value={row.Inicio} onChange={(e) => handleCellEdit(i, 'Inicio', e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-orange-500/50 css-date-picker" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">Fin</p>
+                    <input type="date" value={row.Fin} onChange={(e) => handleCellEdit(i, 'Fin', e.target.value)} className="w-full bg-[#111] border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-orange-500/50 css-date-picker" />
+                  </div>
+                </div>
+                {/* Periodo */}
+                <div className="text-[10px] text-zinc-500 font-mono bg-[#050505] border border-zinc-900 rounded px-2 py-1.5">
+                  {row.Periodo}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -16,11 +16,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dexie": "^4.4.2",
+    "dexie-react-hooks": "^4.4.0",
     "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.7.0",
     "next": "16.2.2",
     "papaparse": "^5.5.3",
+    "pptxgenjs": "^4.0.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
@@ -33,13 +37,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "jszip": "^3.10.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "xml2js": "^0.6.2"
   }
 }

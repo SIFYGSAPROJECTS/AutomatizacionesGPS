@@ -5,13 +5,19 @@ import { ShieldAlert, Calendar, MapPin } from "lucide-react";
 import { ForensePanel } from "./ForensePanel";
 import { FinDeSemanaPanel } from "./FinDeSemanaPanel";
 import { ParadasPanel } from "./ParadasPanel";
+import { ReportesPanel } from "./ReportesPanel";
+import { RutasPanel } from "./RutasPanel";
+import { FileBarChart, Navigation } from "lucide-react";
+import { TimelineSlider } from "@/components/TimelineSlider";
 
-type AuditTab = "forense" | "finsemana" | "paradas";
+type AuditTab = "forense" | "finsemana" | "paradas" | "rutas" | "reportes";
 
-const TABS: { key: AuditTab; label: string; icon: typeof ShieldAlert; description: string }[] = [
+const TABS: { key: AuditTab; label: string; icon: any; description: string }[] = [
   { key: "forense", label: "Forense", icon: ShieldAlert, description: "Rachas de permanencia y auditoría por vehículo/geocerca" },
   { key: "finsemana", label: "Fin de Semana", icon: Calendar, description: "Alertas de uso no autorizado en sábados y domingos" },
   { key: "paradas", label: "Paradas", icon: MapPin, description: "Escaneo térmico de ubicaciones y clasificación de pernoctas" },
+  { key: "rutas", label: "Rutas", icon: Navigation, description: "Análisis de trayectos, origen-destino y duración de viajes" },
+  { key: "reportes", label: "Reportes", icon: FileBarChart, description: "Generador de reportes ejecutivos en PPTX y operacionales en Excel" },
 ];
 
 export default function AuditoriaPage() {
@@ -29,6 +35,9 @@ export default function AuditoriaPage() {
           Centro de control unificado: forense, fin de semana y gestión de paradas.
         </p>
       </div>
+
+      {/* TIME MACHINE SLIDER */}
+      <TimelineSlider />
 
       {/* SEGMENTED CONTROL */}
       <div className="bg-[#050505] border border-zinc-900 rounded-2xl p-1.5 flex gap-1 mb-8">
@@ -63,6 +72,8 @@ export default function AuditoriaPage() {
         {activeTab === "forense" && <ForensePanel />}
         {activeTab === "finsemana" && <FinDeSemanaPanel />}
         {activeTab === "paradas" && <ParadasPanel />}
+        {activeTab === "rutas" && <RutasPanel />}
+        {activeTab === "reportes" && <ReportesPanel />}
       </div>
     </div>
   );
