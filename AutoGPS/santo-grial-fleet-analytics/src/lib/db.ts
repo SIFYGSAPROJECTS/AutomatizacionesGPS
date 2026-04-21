@@ -70,11 +70,11 @@ export async function importRawTelemetry(rawRows: Record<string, string>[]) {
   const records: TelemetryEventRecord[] = [];
   
   for (const row of rawRows) {
-    const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula").trim();
-    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
+    const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula", "Placas").trim();
+    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim() || matricula;
     const conductor = getField(row, "Conductor", "conductor").trim() || "Desconocido";
-    const direccion = getField(row, "Dirección", "Direccion", "direccion").trim();
-    const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial", "Inicio").trim();
+    const direccion = getField(row, "Dirección", "Direccion", "direccion", "Lugar", "lugar").trim();
+    const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial", "Inicio", "Hora", "hora").trim();
     
     if (!vehiculo && !matricula) continue; // Fila vacía o inválida
     if (!horaInicial) continue; // Necesitamos tiempo para que sea único
@@ -83,26 +83,40 @@ export async function importRawTelemetry(rawRows: Record<string, string>[]) {
     const lngStr = getField(row, "Longitud", "longitud", "Lng", "lng", "Long", "long");
     const durStr = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado", "Duración", "Duracion", "duracion");
 
-    // Intentar sacar la fecha (YYYY-MM-DD) desde horaInicial
-    let fecha = "";
-    try {
-      const d = new Date(horaInicial);
-      if (!isNaN(d.getTime())) {
-        fecha = d.toISOString().split('T')[0];
-      } else {
-        // Fallback robusto para "DD/MM/YYYY HH:MM:SS"
-        const match = horaInicial.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    // Intentar sacar la fecha (YYYY-MM-DD)
+    const parseYYYYMMDD = (val: string) => {
+        if (!val) return "";
+        try {
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+        } catch(e) {}
+        const match = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
         if (match) {
-           const day = match[1].padStart(2, '0');
-           const month = match[2].padStart(2, '0');
-           const year = match[3];
-           fecha = `${year}-${month}-${day}`;
+            const day = match[1].padStart(2, '0');
+            const month = match[2].padStart(2, '0');
+            const year = match[3];
+            return `${year}-${month}-${day}`;
         }
-      }
-    } catch(e) {}
+        return "";
+    };
+
+    let fechaRaw = getField(row, "Fecha", "fecha", "Date", "date").trim();
+    let fecha = parseYYYYMMDD(fechaRaw);
+
+    if (!fecha) {
+      fecha = parseYYYYMMDD(horaInicial);
+    }
 
     const vId = matricula || vehiculo;
-    const id = `${vId}|${horaInicial}`;
+    
+    // Hash determinista del row para evitar colisiones pero permitir sobrescritura en caso de resubida
+    const rowString = JSON.stringify(row);
+    let hash = 0;
+    for (let i = 0; i < rowString.length; i++) {
+        hash = ((hash << 5) - hash) + rowString.charCodeAt(i);
+        hash |= 0;
+    }
+    const id = `${vId}|${fecha}|${horaInicial}|${Math.abs(hash)}`;
 
     records.push({
       id,

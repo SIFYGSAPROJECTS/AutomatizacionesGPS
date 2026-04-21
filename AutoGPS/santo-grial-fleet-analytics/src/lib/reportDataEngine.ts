@@ -1,79 +1,55 @@
 /**
- * Report Data Engine
- * Motor central que filtra rawParsedData según la configuración del usuario
- * y prepara estructuras listas para los generadores de Excel y PPTX.
+ * Report Data Engine (Versión Ejecutiva / Directiva)
+ * Motor central que analiza la telemetría para extraer KPIs financieros y clasificar
+ * el uso de fin de semana entre "Proyecto" y "Personal", rastreando orígenes, destinos,
+ * y revisando el comportamiento del Lunes posterior.
  */
 
-import { RawTelemetryRow } from "./streaksAnalyzer";
-
-// ============================================================
-// TIPOS
-// ============================================================
+export interface RawTelemetryRow {
+  [key: string]: any;
+}
 
 export interface ReportConfig {
   includeWeekend: boolean;
   includeStops: boolean;
   includeVehicles: boolean;
-  dateFrom: string;       // YYYY-MM-DD
-  dateTo: string;         // YYYY-MM-DD
-  selectedVehicles: string[];   // vacío = todos
-  selectedLocations: string[];  // vacío = todas
+  dateFrom: string;
+  dateTo: string;
+  selectedVehicles: string[];
+  selectedLocations: string[];
   includeScanner: boolean;
-  scannerQuery: string;         // búsqueda para dirección, vehículo o conductor
+  scannerQuery: string;
 }
 
-export interface WeekendAlertRow {
+// Estructura de Rutas Exactas
+export interface ExecutiveRoute {
   fecha: string;
-  diaSemana: string;
-  matricula: string;
-  vehiculo: string;
-  conductor: string;
-  direccion: string;
-  geocerca: string;
-  horaInicial: string;
-  tiempoAparcadoSecs: number;
+  hora: string;
+  origen: string;
+  destino: string;
+  distancia: number;
+  geocercaDestino: string;
 }
 
-export interface StopSummaryRow {
-  direccion: string;
-  geocerca: string;
-  lat: number;
-  lng: number;
-  totalVisitas: number;
-  vehiculosUnicos: number;
-  visitasNocturnas: number;
-  visitasFinDeSemana: number;
-  promedioAparcadoSecs: number;
-  suspicionScore: number;
-}
-
-export interface VehicleSummaryRow {
-  matricula: string;
-  vehiculo: string;
+// Estadísticas de Conductor (Top Infractores)
+export interface ExecutiveDriverStat {
   conductor: string;
-  totalEventos: number;
-  eventosSabado: number;
-  eventosDomingo: number;
-  ubicacionesVisitadas: number;
-  horasAcumuladas: number;
-  topUbicacion: string;
-  top5WeekendLocations: { direccion: string; fechaHora: string; tiempoSecs: number }[];
-}
-
-export interface ScannerEvent {
   vehiculo: string;
-  conductor: string;
-  direccion: string;
-  fechaHora: string;
-  tiempoSecs: number;
+  totalKmFinde: number;
+  diasUsoFinde: Set<string>;
+  isPersonalAbuse: boolean; // True si NO visitó geocerca ni en finde ni en el lunes posterior
+  rutas: ExecutiveRoute[];
+  gastoGasolina: number;
 }
 
 export interface ReportKPIs {
   totalRegistrosFiltrados: number;
   totalVehiculos: number;
-  totalAlertasFinde: number;
+  totalAlertasFinde: number; // Viajes en fin de semana
+  totalKmFinde: number;
+  gastoGasolinaFinde: number;
+  porcentajePersonal: number; // % de km que fueron puro uso personal
   totalParadasSospechosas: number;
-  horasAcumuladasFinde: number;
   periodoDesde: string;
   periodoHasta: string;
 }
@@ -86,10 +62,13 @@ export interface ReportData {
     sections: string[];
   };
   kpis: ReportKPIs;
-  weekendAlerts: WeekendAlertRow[];
-  stopSummaries: StopSummaryRow[];
-  vehicleSummaries: VehicleSummaryRow[];
-  scannerEvents: ScannerEvent[];
+  top5KmDrivers: ExecutiveDriverStat[];
+  topPersonalAbusers: ExecutiveDriverStat[];
+  // Mantenemos estas para compatibilidad con el modal de UI
+  weekendAlerts: any[];
+  stopSummaries: any[];
+  vehicleSummaries: any[];
+  scannerEvents: any[];
 }
 
 // ============================================================
@@ -109,41 +88,20 @@ function getField(row: Record<string, string>, ...candidates: string[]): string 
   return "";
 }
 
-function parseDurationToSeconds(durStr: string): number {
-  if (!durStr) return 0;
-  const s = durStr.trim().toLowerCase();
-  
-  // Format: "1d 04:30:00" or "1 days 04:30:00"
-  let days = 0;
-  let timeStr = s;
-  const dayMatch = s.match(/^(\d+)\s*(?:d|day|days|días|dias)\s*(.*)$/);
-  if (dayMatch) {
-    days = parseInt(dayMatch[1], 10);
-    timeStr = dayMatch[2].trim();
+function extractDate(fechaHora: string): string {
+  if (!fechaHora) return "";
+  const parts = fechaHora.trim().split(" ");
+  return parts[0] || "";
+}
+
+function extractTime(horaStr: string): string {
+  if (!horaStr) return "";
+  // Si la hora viene con fecha "1899-12-30 16:03:00.000"
+  const parts = horaStr.trim().split(" ");
+  if (parts.length > 1 && parts[1].includes(":")) {
+    return parts[1];
   }
-  
-  // Format: "1h 30m 45s"
-  const textMatch = timeStr.match(/(?:(\d+)\s*h\w*)?\s*(?:(\d+)\s*m\w*)?\s*(?:(\d+(?:\.\d+)?)\s*s\w*)?/);
-  if (textMatch && (textMatch[1] || textMatch[2] || textMatch[3]) && !timeStr.includes(':')) {
-    const h = parseInt(textMatch[1] || "0", 10);
-    const m = parseInt(textMatch[2] || "0", 10);
-    const sec = parseFloat(textMatch[3] || "0");
-    return (days * 86400) + (h * 3600) + (m * 60) + sec;
-  }
-  
-  // Format: HH:MM:SS or MM:SS
-  const parts = timeStr.split(':').map(p => parseFloat(p) || 0);
-  if (parts.length === 3) {
-    return (days * 86400) + (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-  } else if (parts.length === 2) {
-    // Assume HH:MM if it looks like a typical duration without seconds, but GPS standard is often HH:MM:SS
-    // Si la primer parte es mayor a 59, probablemente era MM:SS, sino, asumimos HH:MM por si acaso.
-    return (days * 86400) + (parts[0] * 3600) + (parts[1] * 60); 
-  } else if (parts.length === 1) {
-    return (days * 86400) + parts[0];
-  }
-  
-  return 0;
+  return parts[0] || "";
 }
 
 function parseDateRobust(dateStr: string): Date {
@@ -151,7 +109,6 @@ function parseDateRobust(dateStr: string): Date {
   let d = new Date(dateStr);
   if (!isNaN(d.getTime())) return d;
   
-  // Fallback for DD/MM/YYYY HH:MM:SS
   const match = dateStr.trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (match) {
     const day = parseInt(match[1], 10);
@@ -165,45 +122,16 @@ function parseDateRobust(dateStr: string): Date {
   return new Date("Invalid");
 }
 
-function getStopDurationSeconds(row: Record<string, string>): number {
-  // 1. Try explicit duration column
-  const durStr = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado", "Duración", "Duracion", "duracion");
-  if (durStr) {
-    const parsed = parseDurationToSeconds(durStr);
-    if (parsed > 0) return parsed;
+function getUTCDayRobust(dateStr: string): number {
+  const parsedDate = new Date(dateStr);
+  if (!isNaN(parsedDate.getTime())) {
+    return parsedDate.getUTCDay();
   }
-  
-  // 2. Fallback to math (Hora final - Hora inicial)
-  const hInicio = getField(row, "Hora inicial ", "Hora inicial", "hora inicial", "Inicio");
-  const hFinal = getField(row, "Hora final ", "Hora final", "hora final", "Fin", "Final");
-  
-  if (hInicio && hFinal) {
-    const t1 = parseDateRobust(hInicio).getTime();
-    const t2 = parseDateRobust(hFinal).getTime();
-    if (!isNaN(t1) && !isNaN(t2) && t2 > t1) {
-      return (t2 - t1) / 1000;
-    }
+  const d = parseDateRobust(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.getUTCDay();
   }
-  
-  return 0;
-}
-
-function extractDate(horaInicial: string): string {
-  // "2026-02-28 08:22:00" → "2026-02-28"
-  const parts = horaInicial.trim().split(" ");
-  return parts[0] || "";
-}
-
-function getDayName(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00");
-  const day = d.getDay();
-  return ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][day] || "";
-}
-
-function isWeekend(dateStr: string): boolean {
-  const d = new Date(dateStr + "T12:00:00");
-  const day = d.getDay();
-  return day === 0 || day === 6;
+  return -1;
 }
 
 // ============================================================
@@ -211,258 +139,181 @@ function isWeekend(dateStr: string): boolean {
 // ============================================================
 
 export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig): ReportData {
-  const sections: string[] = [];
-  if (config.includeWeekend) sections.push("Fines de Semana");
-  if (config.includeStops) sections.push("Ubicaciones");
-  if (config.includeVehicles) sections.push("Vehículos");
-  if (config.includeScanner && config.scannerQuery.trim().length > 0) sections.push("Escáner de Auditoría");
+  const fuelEfficiency = 8; // km/L
+  const fuelPrice = 24; // $/L
 
-  // 1. Filtrar registros por fecha
-  const filtered = rawData.filter(row => {
-    const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
-    if (!horaInicial) return false;
-    const dateStr = extractDate(horaInicial);
-    if (!dateStr) return false;
-    if (config.dateFrom && dateStr < config.dateFrom) return false;
-    if (config.dateTo && dateStr > config.dateTo) return false;
-
-    // Filtrar por vehículos seleccionados
-    if (config.selectedVehicles.length > 0) {
-      const mat = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
-      if (!config.selectedVehicles.some(v => mat.includes(v))) return false;
+  // 1. Preparar y ordenar datos cronológicamente por vehículo
+  const processableRows = rawData.map(row => {
+    let fecha = getField(row, "fecha", "date", "Hora inicial ");
+    let hora = getField(row, "hora", "Hora inicial");
+    const vehiculo = getField(row, "vehiculo", "Vehículo", "matricula", "Matrícula");
+    
+    // Limpiar fecha y hora
+    const dateOnly = extractDate(fecha);
+    const timeOnly = extractTime(hora) || extractTime(fecha);
+    
+    let timestamp = 0;
+    if (dateOnly && timeOnly) {
+      timestamp = new Date(`${dateOnly}T${timeOnly}Z`).getTime();
+      if (isNaN(timestamp)) {
+        timestamp = new Date(`${dateOnly} ${timeOnly}`).getTime();
+      }
     }
+    if (isNaN(timestamp) || timestamp === 0) {
+      timestamp = new Date(fecha).getTime() || 0;
+    }
+    
+    return { row, fecha: dateOnly, hora: timeOnly, vehiculo, timestamp };
+  }).sort((a, b) => a.timestamp - b.timestamp);
 
-    return true;
+  // Mapa de orígenes
+  const vehicleOrigins: Record<string, string> = {};
+  
+  // Estructuras de agrupación
+  const driverStatsMap = new Map<string, ExecutiveDriverStat>();
+  
+  // Agrupar filas por vehículo para análisis del "Lunes posterior"
+  const vehicleTimeline = new Map<string, any[]>();
+  
+  processableRows.forEach(({ row, fecha, hora, vehiculo, timestamp }) => {
+    const conductor = getField(row, "conductor") || "Desconocido";
+    if (!vehiculo) return;
+
+    const distanciaStr = getField(row, "distancia (km)", "distancia", "km");
+    const lugar = getField(row, "destino", "lugar", "direccion", "dirección", "Dirección");
+    const origenFila = getField(row, "origen", "Origen");
+    const geocerca = getField(row, "geocercas", "Geocercas", "privado", "trabajo"); // intentar buscar en varias col
+    const dist = parseFloat(distanciaStr) || 0;
+
+    let dateOnly = fecha;
+    let dayOfWeek = getUTCDayRobust(`${dateOnly}T12:00:00Z`); // Forzar UTC mediodía para evitar saltos de zona horaria
+
+    if (!vehicleTimeline.has(vehiculo)) vehicleTimeline.set(vehiculo, []);
+    
+    const timeEvent = {
+      timestamp, dateOnly, dayOfWeek,
+      conductor, vehiculo, dist, lugar, geocerca,
+      origen: origenFila || vehicleOrigins[vehiculo] || "Punto de Partida",
+      hora: hora
+    };
+
+    vehicleTimeline.get(vehiculo)!.push(timeEvent);
+    vehicleOrigins[vehiculo] = lugar;
   });
 
-  // ============================================================
-  // WEEKEND ALERTS
-  // ============================================================
-  const weekendAlerts: WeekendAlertRow[] = [];
-  if (config.includeWeekend) {
-    for (const row of filtered) {
-      const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
-      const dateStr = extractDate(horaInicial);
-      if (!isWeekend(dateStr)) continue;
-
-      const direccion = getField(row, "Dirección", "Direccion", "direccion").trim();
-      const geocerca = getField(row, "Geocercas", "geocercas").trim();
-
-      // Filtrar por ubicaciones si se seleccionaron
-      if (config.selectedLocations.length > 0) {
-        const match = config.selectedLocations.some(loc =>
-          direccion.toLowerCase().includes(loc.toLowerCase()) ||
-          geocerca.toLowerCase().includes(loc.toLowerCase())
-        );
-        if (!match) continue;
-      }
-
-      const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
-      const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
-      const conductor = getField(row, "Conductor", "conductor").trim() || "Desconocido";
-      const tiempoAparcado = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado");
-
-      weekendAlerts.push({
-        fecha: dateStr,
-        diaSemana: getDayName(dateStr),
-        matricula,
-        vehiculo,
-        conductor,
-        direccion,
-        geocerca,
-        horaInicial,
-        tiempoAparcadoSecs: getStopDurationSeconds(row),
-      });
-    }
-    weekendAlerts.sort((a, b) => a.fecha.localeCompare(b.fecha));
-  }
-
-  // ============================================================
-  // STOP SUMMARIES (by address)
-  // ============================================================
-  const stopSummaries: StopSummaryRow[] = [];
-  if (config.includeStops) {
-    const stopMap = new Map<string, {
-      direccion: string; geocerca: string; lat: number; lng: number;
-      totalVisitas: number; vehiculos: Set<string>; nightVisits: number;
-      weekendVisits: number; totalSecs: number; count: number;
-    }>();
-
-    for (const row of filtered) {
-      const direccion = getField(row, "Dirección", "Direccion", "direccion").trim();
-      if (!direccion) continue;
-
-      const latStr = getField(row, "Latitud", "latitud", "Lat");
-      const lngStr = getField(row, "Longitud", "longitud", "Lng", "Long");
-      const lat = parseFloat(latStr);
-      const lng = parseFloat(lngStr);
-      if (isNaN(lat) || isNaN(lng)) continue;
-
-      const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
-      const eventDate = new Date(horaInicial);
-      if (isNaN(eventDate.getTime())) continue;
-
-      const key = direccion.toLowerCase().replace(/\s+/g, " ");
-      const geocerca = getField(row, "Geocercas", "geocercas").trim();
-      const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
-      const secs = getStopDurationSeconds(row);
-      const hora = eventDate.getHours();
-      const dia = eventDate.getDay();
-
-      if (!stopMap.has(key)) {
-        stopMap.set(key, { direccion, geocerca, lat, lng, totalVisitas: 0, vehiculos: new Set(), nightVisits: 0, weekendVisits: 0, totalSecs: 0, count: 0 });
-      }
-      const s = stopMap.get(key)!;
-      s.totalVisitas++;
-      s.count++;
-      s.totalSecs += secs;
-      if (matricula) s.vehiculos.add(matricula);
-      if (hora >= 22 || hora < 6) s.nightVisits++;
-      if (dia === 0 || dia === 6) s.weekendVisits++;
-    }
-
-    for (const s of stopMap.values()) {
-      // Score simple
-      let score = 0;
-      const nightRatio = s.totalVisitas > 0 ? s.nightVisits / s.totalVisitas : 0;
-      if (nightRatio > 0.3) score += 30; else if (nightRatio > 0.1) score += 15;
-      const weekendRatio = s.totalVisitas > 0 ? s.weekendVisits / s.totalVisitas : 0;
-      if (weekendRatio > 0.3) score += 20; else if (weekendRatio > 0.1) score += 10;
-      if (s.vehiculos.size === 1) score += 15;
-      const avgSecs = s.count > 0 ? s.totalSecs / s.count : 0;
-      if (avgSecs > 8 * 3600) score += 20; else if (avgSecs > 4 * 3600) score += 10;
-      if (s.totalVisitas > 10) score += 15; else if (s.totalVisitas > 5) score += 10;
-
-      stopSummaries.push({
-        direccion: s.direccion,
-        geocerca: s.geocerca,
-        lat: s.lat,
-        lng: s.lng,
-        totalVisitas: s.totalVisitas,
-        vehiculosUnicos: s.vehiculos.size,
-        visitasNocturnas: s.nightVisits,
-        visitasFinDeSemana: s.weekendVisits,
-        promedioAparcadoSecs: avgSecs,
-        suspicionScore: Math.min(100, score),
-      });
-    }
-    stopSummaries.sort((a, b) => b.suspicionScore - a.suspicionScore);
-  }
-
-  // ============================================================
-  // VEHICLE SUMMARIES
-  // ============================================================
-  const vehicleSummaries: VehicleSummaryRow[] = [];
-  if (config.includeVehicles) {
-    const vMap = new Map<string, {
-      matricula: string; vehiculo: string; conductor: string;
-      total: number; sat: number; sun: number;
-      ubicaciones: Set<string>; totalSecs: number;
-      topLoc: Map<string, number>;
-      rawVisits: { direccion: string; fechaHora: string; tiempoSecs: number }[];
-    }>();
-
-    for (const row of filtered) {
-      const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
-      const dateStr = extractDate(horaInicial);
-      const eventDate = new Date(horaInicial);
-      if (isNaN(eventDate.getTime())) continue;
-      if (!isWeekend(dateStr)) continue;
-
-      const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
-      if (!matricula) continue;
-
-      const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
-      const conductor = getField(row, "Conductor", "conductor").trim() || "Desconocido";
-      const direccion = getField(row, "Dirección", "Direccion", "direccion").trim();
-      const secs = getStopDurationSeconds(row);
-      const dia = eventDate.getDay();
-
-      if (!vMap.has(matricula)) {
-        vMap.set(matricula, { matricula, vehiculo, conductor, total: 0, sat: 0, sun: 0, ubicaciones: new Set(), totalSecs: 0, topLoc: new Map(), rawVisits: [] });
-      }
-      const v = vMap.get(matricula)!;
-      v.total++;
-      if (dia === 6) v.sat++;
-      if (dia === 0) v.sun++;
-      if (direccion) v.ubicaciones.add(direccion.toLowerCase());
-      v.totalSecs += secs;
-      v.topLoc.set(direccion, (v.topLoc.get(direccion) || 0) + 1);
-      if (!v.conductor || v.conductor === "Desconocido") v.conductor = conductor;
-      if (direccion) {
-        v.rawVisits.push({ direccion, fechaHora: horaInicial, tiempoSecs: secs });
-      }
-    }
-
-    for (const v of vMap.values()) {
-      let topUbicacion = "";
-      let topCount = 0;
-      for (const [loc, cnt] of v.topLoc.entries()) {
-        if (cnt > topCount) { topCount = cnt; topUbicacion = loc; }
-      }
-
-      // Obtener top 5 ubicaciones visitadas por este vehículo
-      const top5WeekendLocations = v.rawVisits
-        .sort((a, b) => b.tiempoSecs - a.tiempoSecs)
-        .slice(0, 5);
-
-      vehicleSummaries.push({
-        matricula: v.matricula,
-        vehiculo: v.vehiculo,
-        conductor: v.conductor,
-        totalEventos: v.total,
-        eventosSabado: v.sat,
-        eventosDomingo: v.sun,
-        ubicacionesVisitadas: v.ubicaciones.size,
-        horasAcumuladas: Math.round(v.totalSecs / 3600 * 10) / 10,
-        topUbicacion,
-        top5WeekendLocations,
-      });
-    }
-    vehicleSummaries.sort((a, b) => b.totalEventos - a.totalEventos);
-  }
-
-  // ============================================================
-  // SCANNER DE AUDITORÍA
-  // ============================================================
-  const scannerEvents: ScannerEvent[] = [];
-  if (config.includeScanner && config.scannerQuery.trim().length > 0) {
-    const query = config.scannerQuery.toLowerCase();
-    for (const row of filtered) {
-      const direccion = getField(row, "Dirección", "Direccion", "direccion").trim();
-      const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
-      const conductor = getField(row, "Conductor", "conductor").trim();
+  // 2. Analizar Timeline y aplicar Algoritmo de "Lunes"
+  for (const [vehiculo, events] of vehicleTimeline.entries()) {
+    
+    for (let i = 0; i < events.length; i++) {
+      const ev = events[i];
       
-      const match = direccion.toLowerCase().includes(query) || 
-                    vehiculo.toLowerCase().includes(query) || 
-                    conductor.toLowerCase().includes(query);
-                    
-      if (match) {
-        const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
+      // Filtrar fechas si config lo requiere
+      if (config.dateFrom && ev.dateOnly < config.dateFrom) continue;
+      if (config.dateTo && ev.dateOnly > config.dateTo) continue;
+
+      // Solo nos importan los viajes en fin de semana (Sábado = 6, Domingo = 0)
+      if (ev.dayOfWeek === 6 || ev.dayOfWeek === 0) {
         
-        scannerEvents.push({
-          vehiculo: vehiculo || getField(row, "Matrícula", "Matricula", "matrícula", "matricula"),
-          conductor: conductor || "Desconocido",
-          direccion,
-          fechaHora: horaInicial,
-          tiempoSecs: getStopDurationSeconds(row),
+        // Determinar si es "Uso Personal Puro" buscando geocercas ese mismo finde o el lunes
+        let isPersonalAbuse = true;
+        
+        // Nueva regla: Para considerarse "Proyecto", debe visitar una geocerca O un lugar
+        // que contenga la palabra clave del proyecto (por defecto, asume Veracruz o sus zonas).
+        const VERACRUZ_KEYWORDS = ["veracruz", "valente diaz", "valente díaz", "boca del rio", "boca del río", "proyecto"];
+        
+        for (let j = i; j < events.length; j++) {
+          const futureEv = events[j];
+          if (futureEv.dayOfWeek !== 6 && futureEv.dayOfWeek !== 0 && futureEv.dayOfWeek !== 1) {
+             break;
+          }
+          
+          const searchString = `${futureEv.geocerca} ${futureEv.lugar} ${futureEv.origen}`.toLowerCase();
+          const matchesProject = VERACRUZ_KEYWORDS.some(kw => searchString.includes(kw));
+          const hasGeofence = futureEv.geocerca && futureEv.geocerca.trim() !== "";
+          const isMondayMorning = futureEv.dayOfWeek === 1 && parseInt(futureEv.hora.split(":")[0]) <= 10;
+          
+          // Solo es Proyecto válido si hace match con las keywords del proyecto en Veracruz
+          // Si tiene geocerca pero no es Veracruz, igual se marca como Uso Personal (Advertencia)
+          if (matchesProject || (hasGeofence && matchesProject)) {
+            isPersonalAbuse = false;
+            break;
+          }
+        }
+
+        // Registrar estadísticas
+        const driverKey = `${ev.conductor}_${vehiculo}`;
+        if (!driverStatsMap.has(driverKey)) {
+          driverStatsMap.set(driverKey, {
+            conductor: ev.conductor,
+            vehiculo: ev.vehiculo,
+            totalKmFinde: 0,
+            diasUsoFinde: new Set<string>(),
+            isPersonalAbuse: true, // asume que es personal hasta que se demuestre lo contrario en la suma
+            rutas: [],
+            gastoGasolina: 0
+          });
+        }
+        
+        const stat = driverStatsMap.get(driverKey)!;
+        stat.totalKmFinde += ev.dist;
+        if (ev.dateOnly) stat.diasUsoFinde.add(ev.dateOnly);
+        
+        // Si al menos UN viaje de su fin de semana tocó geocerca, se salva de ser "Abuso Personal Puro"
+        if (!isPersonalAbuse) {
+          stat.isPersonalAbuse = false;
+        }
+
+        stat.rutas.push({
+          fecha: ev.dateOnly,
+          hora: ev.hora,
+          origen: ev.origen,
+          destino: ev.lugar,
+          distancia: ev.dist,
+          geocercaDestino: ev.geocerca
         });
       }
     }
-    // Ordenar por duración descendente
-    scannerEvents.sort((a, b) => b.tiempoSecs - a.tiempoSecs);
   }
 
-  // ============================================================
-  // KPIs
-  // ============================================================
-  const totalHorasFinde = weekendAlerts.reduce((s, a) => s + a.tiempoAparcadoSecs, 0) / 3600;
+  // 3. Convertir Map a Array y calcular gastos
+  const allDriverStats = Array.from(driverStatsMap.values()).map(stat => {
+    stat.gastoGasolina = (stat.totalKmFinde / fuelEfficiency) * fuelPrice;
+    // Ordenar rutas internas de mayor a menor distancia
+    stat.rutas.sort((a, b) => b.distancia - a.distancia);
+    return stat;
+  }).filter(s => s.totalKmFinde > 0); // Solo los que se movieron
+
+  // 4. Rankings
+  // Top 5 Km Drivers (Independientemente de si fue proyecto o personal)
+  const top5KmDrivers = [...allDriverStats].sort((a, b) => b.totalKmFinde - a.totalKmFinde).slice(0, 5);
+  
+  // Top Abusadores Personales (UsoPersonal = true, ordenados por Gasto/Km)
+  const topPersonalAbusers = [...allDriverStats]
+    .filter(s => s.isPersonalAbuse)
+    .sort((a, b) => b.gastoGasolina - a.gastoGasolina)
+    .slice(0, 5);
+
+  // 5. KPIs Globales
+  let totalKmFindeGlobal = 0;
+  let totalKmPersonalGlobal = 0;
+  let totalAlertasFinde = 0;
+  
+  allDriverStats.forEach(s => {
+    totalKmFindeGlobal += s.totalKmFinde;
+    totalAlertasFinde += s.rutas.length;
+    if (s.isPersonalAbuse) {
+      totalKmPersonalGlobal += s.totalKmFinde;
+    }
+  });
+
   const kpis: ReportKPIs = {
-    totalRegistrosFiltrados: filtered.length,
-    totalVehiculos: new Set(filtered.map(r => getField(r, "Matrícula", "Matricula", "matrícula", "matricula")).filter(Boolean)).size,
-    totalAlertasFinde: weekendAlerts.length,
-    totalParadasSospechosas: stopSummaries.filter(s => s.suspicionScore >= 40).length,
-    horasAcumuladasFinde: Math.round(totalHorasFinde * 10) / 10,
+    totalRegistrosFiltrados: processableRows.length,
+    totalVehiculos: vehicleTimeline.size,
+    totalAlertasFinde,
+    totalKmFinde: totalKmFindeGlobal,
+    gastoGasolinaFinde: (totalKmFindeGlobal / fuelEfficiency) * fuelPrice,
+    porcentajePersonal: totalKmFindeGlobal > 0 ? (totalKmPersonalGlobal / totalKmFindeGlobal) * 100 : 0,
+    totalParadasSospechosas: 0, // Placeholder
     periodoDesde: config.dateFrom,
     periodoHasta: config.dateTo,
   };
@@ -471,18 +322,16 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
     meta: {
       period: `${config.dateFrom} a ${config.dateTo}`,
       generatedAt: new Date().toISOString(),
-      totalRecords: filtered.length,
-      sections,
+      totalRecords: processableRows.length,
+      sections: ["Auditoría Directiva", "Proyecto vs Personal"],
     },
     kpis,
-    weekendAlerts,
-    stopSummaries,
-    vehicleSummaries,
-    scannerEvents,
+    top5KmDrivers,
+    topPersonalAbusers,
+    weekendAlerts: [], stopSummaries: [], vehicleSummaries: [], scannerEvents: []
   };
 }
 
-/** Utilidad: extraer lista de vehículos y rangos de fecha del CSV crudo */
 export function extractFilterOptions(rawData: RawTelemetryRow[]) {
   const vehicles = new Set<string>();
   const locations = new Set<string>();
@@ -490,14 +339,14 @@ export function extractFilterOptions(rawData: RawTelemetryRow[]) {
   let maxDate = "0000-01-01";
 
   for (const row of rawData) {
-    const mat = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
+    const mat = getField(row, "vehiculo", "Vehículo", "Matrícula", "Matricula", "matrícula", "matricula");
     if (mat) vehicles.add(mat);
 
     const geo = getField(row, "Geocercas", "geocercas").trim();
     if (geo) locations.add(geo);
 
-    const horaInicial = getField(row, "Hora inicial ", "Hora inicial", "hora inicial");
-    const dateStr = extractDate(horaInicial);
+    const fecha = getField(row, "fecha", "date", "Hora inicial ");
+    const dateStr = extractDate(fecha);
     if (dateStr && dateStr < minDate) minDate = dateStr;
     if (dateStr && dateStr > maxDate) maxDate = dateStr;
   }

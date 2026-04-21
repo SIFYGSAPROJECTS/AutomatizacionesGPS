@@ -7,16 +7,18 @@ import { FinDeSemanaPanel } from "./FinDeSemanaPanel";
 import { ParadasPanel } from "./ParadasPanel";
 import { ReportesPanel } from "./ReportesPanel";
 import { RutasPanel } from "./RutasPanel";
-import { FileBarChart, Navigation } from "lucide-react";
+import { DeshorasPanel } from "./DeshorasPanel";
+import { FileBarChart, Navigation, BadgeDollarSign } from "lucide-react";
 import { TimelineSlider } from "@/components/TimelineSlider";
 
-type AuditTab = "forense" | "finsemana" | "paradas" | "rutas" | "reportes";
+type AuditTab = "forense" | "finsemana" | "paradas" | "rutas" | "deshoras" | "reportes";
 
 const TABS: { key: AuditTab; label: string; icon: any; description: string }[] = [
   { key: "forense", label: "Forense", icon: ShieldAlert, description: "Rachas de permanencia y auditoría por vehículo/geocerca" },
   { key: "finsemana", label: "Fin de Semana", icon: Calendar, description: "Alertas de uso no autorizado en sábados y domingos" },
   { key: "paradas", label: "Paradas", icon: MapPin, description: "Escaneo térmico de ubicaciones y clasificación de pernoctas" },
   { key: "rutas", label: "Rutas", icon: Navigation, description: "Análisis de trayectos, origen-destino y duración de viajes" },
+  { key: "deshoras", label: "Deshoras", icon: BadgeDollarSign, description: "Auditoría de cobros por uso de vehículos fuera de horario laboral" },
   { key: "reportes", label: "Reportes", icon: FileBarChart, description: "Generador de reportes ejecutivos en PPTX y operacionales en Excel" },
 ];
 
@@ -73,6 +75,7 @@ export default function AuditoriaPage() {
         {activeTab === "finsemana" && <FinDeSemanaPanel />}
         {activeTab === "paradas" && <ParadasPanel />}
         {activeTab === "rutas" && <RutasPanel />}
+        {activeTab === "deshoras" && <DeshorasPanel />}
         {activeTab === "reportes" && <ReportesPanel />}
       </div>
     </div>

@@ -1,56 +1,164 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
-import { analyzeTrips } from "@/lib/tripAnalyzer";
-import { AlertTriangle, MapPin, Navigation, Clock, Activity, Flag } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { AlertTriangle, MapPin, Navigation, Flag } from "lucide-react";
+import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
+
+interface RouteAggregation {
+  routeKey: string;
+  origin: string;
+  destination: string;
+  tripCount: number;
+  averageDurationMinutes: number;
+  tripTypeCategory: "Micro" | "Corto" | "Medio" | "Largo";
+  vehicles: string[];
+}
 
 export function RutasPanel() {
-  const { rawParsedData, tripReport, setTripReport } = useFleetStore();
+  const { rawParsedData } = useFleetStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDay, setFilterDay] = useState<"weekend" | "all">("weekend");
+  const [filterDay, setFilterDay] = useState<"weekend" | "all">("all");
   const [filterCategory, setFilterCategory] = useState<string>("All");
 
-  useEffect(() => {
-    if (rawParsedData && !tripReport) {
-      const report = analyzeTrips(rawParsedData);
-      setTripReport(report);
-    }
-  }, [rawParsedData]);
+  const stats = useMemo(() => {
+    if (!rawParsedData) return null;
 
-  if (!rawParsedData) {
+    // 1. Acondicionar datos y ordenar para el Origen
+    const processableRows = rawParsedData.map(row => {
+      const getField = (keys: string[]) => {
+        const rowKeys = Object.keys(row);
+        for (const k of keys) {
+          const match = rowKeys.find(rk => rk.trim().toLowerCase() === k.trim().toLowerCase());
+          if (match && row[match]) return row[match].trim();
+        }
+        return "";
+      };
+      const fecha = getField(["fecha", "date"]);
+      const horaStr = getField(["hora"]);
+      const vehiculo = getField(["vehiculo", "vehículo", "matricula"]);
+      const timestamp = new Date(`${fecha} ${horaStr}`).getTime() || 0;
+      return { row, getField, fecha, vehiculo, timestamp };
+    }).sort((a, b) => a.timestamp - b.timestamp);
+
+    const vehicleOrigins: Record<string, string> = {};
+    const routeMap = new Map<string, any>();
+    
+    let micro = 0, short = 0, medium = 0, long = 0;
+    let totalTripsCount = 0;
+
+    processableRows.forEach(({ getField, fecha, vehiculo }) => {
+      const distStr = getField(["distancia (km)", "distancia", "km"]);
+      const velStr = getField(["velocidad media", "vel. media", "vel media", "velocidad prom"]);
+      const lugar = getField(["lugar", "direccion", "dirección"]);
+      
+      const origin = vehicleOrigins[vehiculo] || "Punto de Partida (Desconocido)";
+      
+      let dayOfWeek = -1;
+      const parsedDate = new Date(fecha);
+      if (!isNaN(parsedDate.getTime())) dayOfWeek = parsedDate.getUTCDay();
+
+      let isIncluded = true;
+      if (filterDay === "weekend" && dayOfWeek !== 0 && dayOfWeek !== 6) {
+         isIncluded = false;
+      }
+
+      if (isIncluded) {
+        const dist = parseFloat(distStr);
+        if (!isNaN(dist) && dist > 0) {
+          let vel = parseFloat(velStr);
+          if (isNaN(vel) || vel <= 0) vel = 25; // Velocidad promedio asumida si no existe en la celda
+          
+          const durationMins = Math.round((dist / vel) * 60);
+          const category = durationMins < 10 ? "Micro" : durationMins <= 30 ? "Corto" : durationMins <= 60 ? "Medio" : "Largo";
+
+          const routeKey = `${origin} -> ${lugar}`;
+          if (!routeMap.has(routeKey)) {
+            routeMap.set(routeKey, {
+               routeKey,
+               origin,
+               destination: lugar,
+               tripCount: 0,
+               durationsArr: [],
+               vehicles: new Set<string>()
+            });
+          }
+          
+          const agg = routeMap.get(routeKey)!;
+          agg.tripCount++;
+          agg.durationsArr.push(durationMins);
+          if (vehiculo) agg.vehicles.add(vehiculo);
+
+          totalTripsCount++;
+          if (category === "Micro") micro++;
+          else if (category === "Corto") short++;
+          else if (category === "Medio") medium++;
+          else long++;
+        }
+      }
+      
+      // Actualizar el origen para el próximo viaje del mismo vehículo
+      if (lugar) {
+         vehicleOrigins[vehiculo] = lugar;
+      }
+    });
+
+    // 2. Colapsar arreglos, calcular medianas y ordenar
+    const aggregatedRoutes: RouteAggregation[] = Array.from(routeMap.values()).map(agg => {
+      const arr = agg.durationsArr.sort((a: number, b: number) => a - b);
+      const mid = Math.floor(arr.length / 2);
+      const median = arr.length % 2 !== 0 ? arr[mid] : Math.round((arr[mid - 1] + arr[mid]) / 2);
+      
+      const cat = median < 10 ? "Micro" : median <= 30 ? "Corto" : median <= 60 ? "Medio" : "Largo";
+      
+      return {
+        routeKey: agg.routeKey,
+        origin: agg.origin,
+        destination: agg.destination,
+        tripCount: agg.tripCount,
+        averageDurationMinutes: median,
+        tripTypeCategory: cat,
+        vehicles: Array.from(agg.vehicles) as string[]
+      };
+    }).sort((a, b) => b.tripCount - a.tripCount);
+
+    return {
+      routes: aggregatedRoutes,
+      kpis: {
+         totalTrips: totalTripsCount,
+         micro, short, medium, long,
+         mostFrequentRoute: aggregatedRoutes.length > 0 ? aggregatedRoutes[0].routeKey : "Sin Datos"
+      }
+    };
+  }, [rawParsedData, filterDay]);
+
+  if (!rawParsedData || !stats) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <div className="w-20 h-20 bg-zinc-900 rounded-2xl flex items-center justify-center border border-zinc-800">
           <Navigation className="w-8 h-8 text-zinc-500" />
         </div>
         <h2 className="font-heading text-4xl text-white mt-4">Sin Datos</h2>
-        <p className="text-zinc-400">Selecciona un mes en el Time Machine para analizar rutas.</p>
+        <p className="text-zinc-400">Carga un reporte y selecciona un mes en el Time Machine para analizar rutas.</p>
       </div>
     );
   }
 
-  if (!tripReport) {
-    return <div className="text-zinc-500 p-8 text-center animate-pulse">Analizando secuencias de rutas...</div>;
-  }
-
   // KPIs
-  const { kpis } = tripReport;
+  const { kpis, routes } = stats;
 
-  // Filtrado de rutas frecuentes
-  const baseRoutes = filterDay === "weekend" ? tripReport.frequentWeekendRoutes : tripReport.frequentRoutes;
-  const filteredRoutes = baseRoutes.filter(r => {
+  // Filtrado de rutas según barra de búsqueda y categoría
+  const filteredRoutes = routes.filter(r => {
     const matchesSearch = r.routeKey.toLowerCase().includes(searchTerm.toLowerCase()) || r.vehicles.some(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = filterCategory === "All" || r.tripTypeCategory === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
   const pieData = [
-    { name: "Micro (< 10m)", value: kpis.microTripsWeekend, color: "#10b981" },
-    { name: "Corto (10-30m)", value: kpis.shortTripsWeekend, color: "#3b82f6" },
-    { name: "Medio (30-60m)", value: kpis.mediumTripsWeekend, color: "#f59e0b" },
-    { name: "Largo (> 60m)", value: kpis.longTripsWeekend, color: "#ef4444" },
+    { name: "Micro (< 10m)", value: kpis.micro, color: "#10b981" },
+    { name: "Corto (10-30m)", value: kpis.short, color: "#3b82f6" },
+    { name: "Medio (30-60m)", value: kpis.medium, color: "#f59e0b" },
+    { name: "Largo (> 60m)", value: kpis.long, color: "#ef4444" },
   ].filter(d => d.value > 0);
 
   const getBadgeColor = (type: string) => {
@@ -80,8 +188,8 @@ export function RutasPanel() {
             <Navigation className="w-6 h-6 text-blue-500" />
           </div>
           <div>
-            <p className="text-sm text-zinc-500 font-medium">Viajes Totales (Fin de Sem.)</p>
-            <p className="text-2xl font-bold text-white">{kpis.totalWeekendTrips.toLocaleString()}</p>
+            <p className="text-sm text-zinc-500 font-medium">Viajes Analizados</p>
+            <p className="text-2xl font-bold text-white">{kpis.totalTrips.toLocaleString()}</p>
           </div>
         </div>
         
@@ -91,7 +199,7 @@ export function RutasPanel() {
           </div>
           <div>
             <p className="text-sm text-zinc-500 font-medium">Rutas Largas ({">"}1hr)</p>
-            <p className="text-2xl font-bold text-white">{kpis.longTripsWeekend.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">{kpis.long.toLocaleString()}</p>
           </div>
         </div>
 
@@ -100,8 +208,8 @@ export function RutasPanel() {
             <MapPin className="w-6 h-6 text-zinc-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm text-zinc-500 font-medium">Ruta de mayor tráfico</p>
-            <p className="text-lg font-bold text-white truncate" title={kpis.mostFrequentWeekendRoute}>{kpis.mostFrequentWeekendRoute}</p>
+            <p className="text-sm text-zinc-500 font-medium">Trayecto más repetido</p>
+            <p className="text-lg font-bold text-white truncate" title={kpis.mostFrequentRoute}>{kpis.mostFrequentRoute}</p>
           </div>
         </div>
       </div>
@@ -109,29 +217,33 @@ export function RutasPanel() {
       {/* SECCIÓN B: Gráficas de Categorización */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 bg-[#050505] border border-zinc-900 rounded-2xl p-6 shadow-2xl">
-          <h3 className="text-lg font-bold text-white mb-6">Comportamiento de Viajes</h3>
+          <h3 className="text-lg font-bold text-white mb-6">Tiempos Reales de Conducción</h3>
           <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', color: '#fff', borderRadius: '8px' }}
-                  itemStyle={{ color: '#fff' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', color: '#fff', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-zinc-600 text-sm">No hay datos</div>
+            )}
           </div>
           <div className="flex flex-col gap-3 mt-4">
             {pieData.map((d, i) => (
@@ -157,8 +269,8 @@ export function RutasPanel() {
                 onChange={(e) => setFilterDay(e.target.value as any)}
                 className="bg-zinc-950 border border-zinc-800 text-zinc-300 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               >
-                <option value="weekend">Fines de Semana</option>
                 <option value="all">Toda la Semana</option>
+                <option value="weekend">Solo Fines de Semana</option>
               </select>
 
               <select 
@@ -189,12 +301,12 @@ export function RutasPanel() {
                 <tr>
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase">Trayecto (Origen → Destino)</th>
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-center">Viajes</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-center">Duración Prom.</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-center">T. Conducción</th>
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-center">Categoría</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
-                {filteredRoutes.slice(0, 50).map((r, i) => (
+                {filteredRoutes.slice(0, 100).map((r, i) => (
                   <tr key={i} className="hover:bg-zinc-900/30 transition-colors">
                     <td className="py-4 px-4 min-w-0">
                       <div className="flex items-center gap-3">
