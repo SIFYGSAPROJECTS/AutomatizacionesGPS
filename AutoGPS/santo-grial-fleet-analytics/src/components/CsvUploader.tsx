@@ -10,6 +10,7 @@ import dictionary from "@/lib/dictionary.json";
 import { useFleetStore } from "@/store/useFleetStore";
 import { useAnalysisHistory } from "@/hooks/useAnalysisHistory";
 import { importRawTelemetry } from "@/lib/db";
+import { parseNavixyReport } from "@/lib/navixyXlsxParser";
 
 export function CsvUploader() {
   const [dragActive, setDragActive] = useState(false);
@@ -38,35 +39,47 @@ export function CsvUploader() {
     else if (e.type === "dragleave") setDragActive(false);
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setFile(file);
     // Limpiamos el global momentaneamente hasta procesarlo
     setStreakReport(null as any); // hack bypass null para borrar UI rápido
     
-    Papa.parse<RawTelemetryRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        setIsProcessing(true);
-        try {
-          console.log("Iniciando inyección masiva en IndexedDB...");
-          await importRawTelemetry(results.data as Record<string, string>[]);
-          console.log("Inyección completada.");
-          
-          await useFleetStore.getState().scanAvailableMonths();
-          
-          const range = useFleetStore.getState().globalDateRange;
-          if (range) {
-            await useFleetStore.getState().loadDataFromDb(range.from, range.to);
-          }
-        } catch (e) {
-          console.error("Error importando a DB:", e);
-          alert("Hubo un error guardando los datos en la base de datos local.");
-        } finally {
-          setIsProcessing(false);
-        }
-      },
-    });
+    setIsProcessing(true);
+
+    try {
+      let rawRows: Record<string, string>[] = [];
+
+      if (file.name.toLowerCase().endsWith(".xlsx")) {
+        console.log("Procesando reporte agrupado XLSX de Navixy...");
+        rawRows = await parseNavixyReport(file);
+      } else {
+        console.log("Procesando CSV plano...");
+        rawRows = await new Promise<Record<string, string>[]>((resolve, reject) => {
+          Papa.parse<RawTelemetryRow>(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => resolve(results.data as Record<string, string>[]),
+            error: (err) => reject(err),
+          });
+        });
+      }
+
+      console.log(`Iniciando inyección masiva en IndexedDB con ${rawRows.length} registros...`);
+      await importRawTelemetry(rawRows);
+      console.log("Inyección completada.");
+      
+      await useFleetStore.getState().scanAvailableMonths();
+      
+      const range = useFleetStore.getState().globalDateRange;
+      if (range) {
+        await useFleetStore.getState().loadDataFromDb(range.from, range.to);
+      }
+    } catch (e) {
+      console.error("Error importando archivo:", e);
+      alert("Hubo un error al procesar o guardar el archivo.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -384,7 +397,7 @@ export function CsvUploader() {
       >
         <input 
           type="file" 
-          accept=".csv" 
+          accept=".csv, .xlsx" 
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
           onChange={handleChange}
         />
@@ -427,9 +440,9 @@ export function CsvUploader() {
             <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mb-5 border border-zinc-800 shadow-xl">
               <UploadCloud className="w-10 h-10 text-orange-500" />
             </div>
-            <h3 className="text-xl font-semibold text-zinc-200 mb-2">Sube tu Archivo de Telemetría</h3>
+            <h3 className="text-xl font-semibold text-zinc-200 mb-2">Sube tu Archivo de Telemetría o Rutas</h3>
             <p className="text-zinc-500 max-w-md">
-              Arrastra y suelta tu archivo CSV crudo aquí. Al procesarlo, quedará guardado magnéticamente en nuestra bóveda Zustand.
+              Arrastra y suelta tu archivo <b>CSV</b> o <b>XLSX</b> aquí. El sistema detectará automáticamente si es un archivo plano o un reporte agrupado y lo procesará mágicamente.
             </p>
           </div>
         )}

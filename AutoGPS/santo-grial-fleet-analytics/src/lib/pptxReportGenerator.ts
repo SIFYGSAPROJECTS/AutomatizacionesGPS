@@ -109,84 +109,61 @@ export async function generatePptxReport(data: ReportData, filename = "Reporte_G
   });
 
   // ==========================================
-  // SLIDE 4: TOP 5 CONDUCTORES (Total KM)
+  // SLIDE 4: TOP CONDUCTORES (Total KM) Paginado
   // ==========================================
-  if (data.top5KmDrivers.length > 0) {
-    const slide4 = pres.addSlide({ masterName: "MASTER_SLIDE" });
-    slide4.addText("3. Top 5 Conductores: Mayor Kilometraje de Fin de Semana", { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 26, color: THEME.brandDarkBlue, fontFace: "Arial", bold: true });
-    
-    const tableRows4: any[] = [
-      [
-        { text: "Conductor / Vehículo", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial" } },
-        { text: "Días Usados", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
-        { text: "Km Finde", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
-        { text: "Gasto Estimado", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
-        { text: "Ruta Principal (A -> B)", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial" } }
-      ]
-    ];
+  const MAX_ROWS_PER_SLIDE = 3;
 
-    data.top5KmDrivers.forEach(d => {
-      const mainRoute = d.rutas.length > 0 ? `${d.rutas[0].origen.substring(0,25)}... -> ${d.rutas[0].destino.substring(0,25)}...` : "Sin detalles de ruta";
+  if (data.top10Drivers && data.top10Drivers.length > 0) {
+    for (let i = 0; i < data.top10Drivers.length; i += MAX_ROWS_PER_SLIDE) {
+      const chunk = data.top10Drivers.slice(i, i + MAX_ROWS_PER_SLIDE);
+      const slide4 = pres.addSlide({ masterName: "MASTER_SLIDE" });
+      const pageText = data.top10Drivers.length > MAX_ROWS_PER_SLIDE ? ` (Pág. ${Math.floor(i/MAX_ROWS_PER_SLIDE)+1})` : "";
+      slide4.addText(`3. Top Conductores: Mayor Kilometraje de Fin de Semana${pageText}`, { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 26, color: THEME.brandDarkBlue, fontFace: "Arial", bold: true });
       
-      tableRows4.push([
-        { text: `${d.conductor}\n(${d.vehiculo})`, options: { fontFace: "Arial" } },
-        { text: `${d.diasUsoFinde.size}`, options: { fontFace: "Arial", align: "center" } },
-        { text: `${Math.round(d.totalKmFinde)} km`, options: { fontFace: "Arial", align: "center", bold: true, color: THEME.brandRed } },
-        { text: formatMoney(d.gastoGasolina), options: { fontFace: "Arial", align: "center", bold: true } },
-        { text: mainRoute, options: { fontFace: "Arial", fontSize: 10 } }
-      ]);
-    });
+      const tableRows4: any[] = [
+        [
+          { text: "Conductor / Vehículo", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial" } },
+          { text: "Días Usados", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
+          { text: "Km Finde", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
+          { text: "Vel. Máx", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
+          { text: "Gasto Estimado", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial", align: "center" } },
+          { text: "Top 3 Rutas Principales", options: { bold: true, fill: THEME.brandDarkBlue, color: "FFFFFF", fontFace: "Arial" } }
+        ]
+      ];
 
-    slide4.addTable(tableRows4, {
-      x: 0.5, y: 1.5, w: 9.0,
-      rowH: 0.5,
-      colW: [2.0, 1.0, 1.2, 1.5, 3.3],
-      border: { type: "solid", color: THEME.textGray, pt: 1 },
-      fontSize: 12,
-      fontFace: "Arial",
-      valign: "middle"
-    });
+      chunk.forEach((d, index) => {
+        const top3 = [...d.rutas]
+          .sort((a, b) => b.distancia - a.distancia)
+          .slice(0, 3);
+        
+        const routesText = top3.length > 0 
+          ? top3.map((r, idx) => `${idx+1}. [${r.fecha} ${r.hora}] De ${r.origen.substring(0,35)}\n    A: ${r.destino.substring(0,35)} (${Math.round(r.distancia)} km)`).join("\n") 
+          : "Sin detalles de ruta";
+        
+        const rowFill = index % 2 === 0 ? "F9FAFB" : "FFFFFF";
+
+        tableRows4.push([
+          { text: `${d.conductor}\n(${d.vehiculo})`, options: { fontFace: "Arial", fill: rowFill } },
+          { text: `${d.diasUsoFinde.size}`, options: { fontFace: "Arial", align: "center", fill: rowFill } },
+          { text: `${Math.round(d.totalKmFinde)} km`, options: { fontFace: "Arial", align: "center", bold: true, color: THEME.brandRed, fill: rowFill } },
+          { text: `${d.velMax} km/h`, options: { fontFace: "Arial", align: "center", fill: rowFill } },
+          { text: formatMoney(d.gastoGasolina), options: { fontFace: "Arial", align: "center", bold: true, fill: rowFill } },
+          { text: routesText, options: { fontFace: "Arial", fontSize: 8, fill: rowFill } }
+        ]);
+      });
+
+      slide4.addTable(tableRows4, {
+        x: 0.5, y: 1.5, w: 9.0,
+        rowH: 0.8,
+        colW: [1.8, 0.8, 0.9, 0.8, 1.2, 3.5],
+        border: [{ pt: 1, color: "EAEAEA" }, { pt: 0 }, { pt: 1, color: "EAEAEA" }, { pt: 0 }],
+        fontSize: 12,
+        fontFace: "Arial",
+        valign: "middle"
+      });
+    }
   }
 
-  // ==========================================
-  // SLIDE 5: ALERTA ROJA (Abuso Puro)
-  // ==========================================
-  if (data.topPersonalAbusers.length > 0) {
-    const slide5 = pres.addSlide({ masterName: "MASTER_SLIDE" });
-    slide5.addText("4. ALERTA ROJA: Abuso de Uso Personal", { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 32, color: THEME.brandRed, fontFace: "Arial", bold: true });
-    slide5.addText("Estos conductores extrajeron la unidad en fin de semana, generaron gastos, y NUNCA se presentaron a una Geocerca el día posterior.", { x: 0.5, y: 1.1, w: 9.0, h: 0.4, fontSize: 14, color: THEME.textGray, fontFace: "Arial", bold: true });
-
-    const tableRows5: any[] = [
-      [
-        { text: "Conductor / Vehículo", options: { bold: true, fill: THEME.brandRed, color: "FFFFFF", fontFace: "Arial" } },
-        { text: "Km Gastados", options: { bold: true, fill: THEME.brandRed, color: "FFFFFF", fontFace: "Arial", align: "center" } },
-        { text: "Pérdida $$", options: { bold: true, fill: THEME.brandRed, color: "FFFFFF", fontFace: "Arial", align: "center" } },
-        { text: "Ruta Documentada (Prueba)", options: { bold: true, fill: THEME.brandRed, color: "FFFFFF", fontFace: "Arial" } }
-      ]
-    ];
-
-    data.topPersonalAbusers.forEach(d => {
-      const mainRoute = d.rutas.length > 0 ? `De: ${d.rutas[0].origen.substring(0,30)}...\nA: ${d.rutas[0].destino.substring(0,30)}...` : "Sin detalles de ruta";
-      
-      tableRows5.push([
-        { text: `${d.conductor}\n(${d.vehiculo})`, options: { fontFace: "Arial" } },
-        { text: `${Math.round(d.totalKmFinde)} km`, options: { fontFace: "Arial", align: "center", bold: true } },
-        { text: formatMoney(d.gastoGasolina), options: { fontFace: "Arial", align: "center", bold: true, color: THEME.brandRed } },
-        { text: mainRoute, options: { fontFace: "Arial", fontSize: 10 } }
-      ]);
-    });
-
-    slide5.addTable(tableRows5, {
-      x: 0.5, y: 1.8, w: 9.0,
-      rowH: 0.6,
-      colW: [2.0, 1.2, 1.5, 4.3],
-      border: { type: "solid", color: THEME.brandRed, pt: 1 },
-      fontSize: 12,
-      fontFace: "Arial",
-      valign: "middle"
-    });
-  }
-
-  // Download
+  // Descargar Reporte
   pres.writeFile({ fileName: filename });
 }

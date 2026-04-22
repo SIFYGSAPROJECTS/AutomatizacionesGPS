@@ -47,7 +47,7 @@ export async function generateExcelReport(data: ReportData, filename = "Reporte_
   sheetResumen.addRow({ indicador: "Total Registros Filtrados", valor: data.kpis.totalRegistrosFiltrados });
   sheetResumen.addRow({ indicador: "Total Vehículos Involucrados", valor: data.kpis.totalVehiculos });
   sheetResumen.addRow({ indicador: "Alertas de Fin de Semana", valor: data.kpis.totalAlertasFinde });
-  sheetResumen.addRow({ indicador: "Horas Acumuladas Fin de Semana", valor: `${data.kpis.horasAcumuladasFinde} h` });
+  sheetResumen.addRow({ indicador: "Horas Acumuladas Fin de Semana", valor: `${(data.kpis as any).horasAcumuladasFinde || 0} h` });
   sheetResumen.addRow({ indicador: "Paradas Sospechosas", valor: data.kpis.totalParadasSospechosas });
   sheetResumen.addRow({ indicador: "Fecha de Generación", valor: new Date(data.meta.generatedAt).toLocaleString() });
 

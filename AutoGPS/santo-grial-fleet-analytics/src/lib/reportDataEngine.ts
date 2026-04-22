@@ -1,9 +1,13 @@
 /**
  * Report Data Engine (Versión Ejecutiva / Directiva)
  * Motor central que analiza la telemetría para extraer KPIs financieros y clasificar
- * el uso de fin de semana entre "Proyecto" y "Personal", rastreando orígenes, destinos,
- * y revisando el comportamiento del Lunes posterior.
+ * el uso de fin de semana entre "Proyecto" y "Personal".
+ * 
+ * v3.0 — Ahora usa el Motor de Proximidad Geográfica (Haversine) para determinar
+ * si un vehículo estuvo cerca de una geocerca oficial. Si lo estuvo → Justificado.
  */
+
+import { loadGeofences, checkProximity } from "./geofenceEngine";
 
 export interface RawTelemetryRow {
   [key: string]: any;
@@ -29,6 +33,7 @@ export interface ExecutiveRoute {
   destino: string;
   distancia: number;
   geocercaDestino: string;
+  velMax: number;
 }
 
 // Estadísticas de Conductor (Top Infractores)
@@ -40,6 +45,7 @@ export interface ExecutiveDriverStat {
   isPersonalAbuse: boolean; // True si NO visitó geocerca ni en finde ni en el lunes posterior
   rutas: ExecutiveRoute[];
   gastoGasolina: number;
+  velMax: number;
 }
 
 export interface ReportKPIs {
@@ -62,8 +68,7 @@ export interface ReportData {
     sections: string[];
   };
   kpis: ReportKPIs;
-  top5KmDrivers: ExecutiveDriverStat[];
-  topPersonalAbusers: ExecutiveDriverStat[];
+  top10Drivers: ExecutiveDriverStat[];
   // Mantenemos estas para compatibilidad con el modal de UI
   weekendAlerts: any[];
   stopSummaries: any[];
@@ -96,12 +101,27 @@ function extractDate(fechaHora: string): string {
 
 function extractTime(horaStr: string): string {
   if (!horaStr) return "";
-  // Si la hora viene con fecha "1899-12-30 16:03:00.000"
   const parts = horaStr.trim().split(" ");
+  let time = parts[0] || "";
   if (parts.length > 1 && parts[1].includes(":")) {
-    return parts[1];
+    time = parts[1];
   }
-  return parts[0] || "";
+  
+  const lower = horaStr.toLowerCase();
+  if (lower.includes("p.") || lower.includes("pm")) {
+    const hParts = time.split(":");
+    let h = parseInt(hParts[0], 10);
+    if (h < 12) h += 12;
+    hParts[0] = h.toString().padStart(2, '0');
+    time = hParts.join(":");
+  } else if (lower.includes("a.") || lower.includes("am")) {
+    const hParts = time.split(":");
+    let h = parseInt(hParts[0], 10);
+    if (h === 12) h = 0;
+    hParts[0] = h.toString().padStart(2, '0');
+    time = hParts.join(":");
+  }
+  return time;
 }
 
 function parseDateRobust(dateStr: string): Date {
@@ -138,9 +158,14 @@ function getUTCDayRobust(dateStr: string): number {
 // ALGORITMO PRINCIPAL
 // ============================================================
 
-export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig): ReportData {
+export async function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig): Promise<ReportData> {
   const fuelEfficiency = 8; // km/L
   const fuelPrice = 24; // $/L
+  const PROXIMITY_RADIUS_KM = 0.5; // Radio muy estricto (500m) para evitar falsos positivos en ciudades
+
+  // 0. Cargar geocercas oficiales (desde /public/objects.csv)
+  const geofences = await loadGeofences();
+  console.log(`[ReportEngine] Geocercas disponibles para proximidad: ${geofences.length}`);
 
   // 1. Preparar y ordenar datos cronológicamente por vehículo
   const processableRows = rawData.map(row => {
@@ -180,10 +205,12 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
     if (!vehiculo) return;
 
     const distanciaStr = getField(row, "distancia (km)", "distancia", "km");
+    const velMaxStr = getField(row, "vel. máxima", "vel maxima", "velocidad maxima");
     const lugar = getField(row, "destino", "lugar", "direccion", "dirección", "Dirección");
     const origenFila = getField(row, "origen", "Origen");
     const geocerca = getField(row, "geocercas", "Geocercas", "privado", "trabajo"); // intentar buscar en varias col
     const dist = parseFloat(distanciaStr) || 0;
+    const velMax = parseFloat(velMaxStr) || 0;
 
     let dateOnly = fecha;
     let dayOfWeek = getUTCDayRobust(`${dateOnly}T12:00:00Z`); // Forzar UTC mediodía para evitar saltos de zona horaria
@@ -192,9 +219,11 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
     
     const timeEvent = {
       timestamp, dateOnly, dayOfWeek,
-      conductor, vehiculo, dist, lugar, geocerca,
+      conductor, vehiculo, dist, velMax, lugar, geocerca,
       origen: origenFila || vehicleOrigins[vehiculo] || "Punto de Partida",
-      hora: hora
+      hora: hora,
+      lat: parseFloat(String(getField(row, "Latitud", "latitud", "lat")).replace(/[^\d.-]/g, '')),
+      lng: parseFloat(String(getField(row, "Longitud", "longitud", "lng", "lon")).replace(/[^\d.-]/g, '')),
     };
 
     vehicleTimeline.get(vehiculo)!.push(timeEvent);
@@ -214,33 +243,57 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
       // Solo nos importan los viajes en fin de semana (Sábado = 6, Domingo = 0)
       if (ev.dayOfWeek === 6 || ev.dayOfWeek === 0) {
         
-        // Determinar si es "Uso Personal Puro" buscando geocercas ese mismo finde o el lunes
+        // Nueva regla: Sábado solo cuenta después de las 15:00 (3 PM)
+        if (ev.dayOfWeek === 6) {
+           const hourStr = ev.hora.split(":")[0];
+           const hour = parseInt(hourStr || "0", 10);
+           if (hour < 15) continue;
+        }
+        
+        // Determinar si es "Uso Personal Puro"
+        // ALGORITMO v5: Basado estrictamente en Geocercas y Pernoctas Detectadas
         let isPersonalAbuse = true;
+
+        const geocercaLow = (ev.geocerca || "").toLowerCase();
+        const isAtWork = geocercaLow.length > 0; // Cualquier geocerca es trabajo
+        const isAtBase = geocercaLow.includes("oficina"); // Solo las que dicen oficina son base
         
-        // Nueva regla: Para considerarse "Proyecto", debe visitar una geocerca O un lugar
-        // que contenga la palabra clave del proyecto (por defecto, asume Veracruz o sus zonas).
-        const VERACRUZ_KEYWORDS = ["veracruz", "valente diaz", "valente díaz", "boca del rio", "boca del río", "proyecto"];
-        
-        for (let j = i; j < events.length; j++) {
-          const futureEv = events[j];
-          if (futureEv.dayOfWeek !== 6 && futureEv.dayOfWeek !== 0 && futureEv.dayOfWeek !== 1) {
-             break;
-          }
-          
-          const searchString = `${futureEv.geocerca} ${futureEv.lugar} ${futureEv.origen}`.toLowerCase();
-          const matchesProject = VERACRUZ_KEYWORDS.some(kw => searchString.includes(kw));
-          const hasGeofence = futureEv.geocerca && futureEv.geocerca.trim() !== "";
-          const isMondayMorning = futureEv.dayOfWeek === 1 && parseInt(futureEv.hora.split(":")[0]) <= 10;
-          
-          // Solo es Proyecto válido si hace match con las keywords del proyecto en Veracruz
-          // Si tiene geocerca pero no es Veracruz, igual se marca como Uso Personal (Advertencia)
-          if (matchesProject || (hasGeofence && matchesProject)) {
-            isPersonalAbuse = false;
-            break;
+        // ─── CAPA 1: Geocerca Directa ───
+        if (isAtWork) {
+          isPersonalAbuse = false;
+        }
+
+        // ─── CAPA 2: Proximidad GPS y Regreso a Base ───
+        if (isPersonalAbuse) {
+          for (let j = i; j < events.length; j++) {
+            const futureEv = events[j];
+            if (futureEv.dayOfWeek !== 6 && futureEv.dayOfWeek !== 0 && futureEv.dayOfWeek !== 1) break;
+            
+            const futureGeoLow = (futureEv.geocerca || "").toLowerCase();
+            const futureIsBase = futureGeoLow.includes("oficina");
+
+            // Si el viaje del domingo termina en la OFICINA (Base), se justifica como retorno
+            if (ev.dayOfWeek === 0 && futureIsBase) {
+              isPersonalAbuse = false;
+              break;
+            }
+
+            // Proximidad GPS a geocercas conocidas (Layer 1 original)
+            if (!isNaN(futureEv.lat) && !isNaN(futureEv.lng)) {
+              const proximity = checkProximity(futureEv.lat, futureEv.lng, PROXIMITY_RADIUS_KM);
+              if (proximity.isNearGeofence) {
+                const geoName = proximity.nearestGeofence.toLowerCase();
+                const IGNORE_GEOFENCES = ["casa", "privado", "hogar", "oxxo", "gasolinera", "7-eleven", "7 eleven", "super", "tienda", "domicilio"];
+                if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig))) {
+                  isPersonalAbuse = false;
+                  break;
+                }
+              }
+            }
           }
         }
 
-        // Registrar estadísticas
+        // Registrar estadísticas (independientemente de si es abuso o no, para tener la bitácora)
         const driverKey = `${ev.conductor}_${vehiculo}`;
         if (!driverStatsMap.has(driverKey)) {
           driverStatsMap.set(driverKey, {
@@ -250,12 +303,14 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
             diasUsoFinde: new Set<string>(),
             isPersonalAbuse: true, // asume que es personal hasta que se demuestre lo contrario en la suma
             rutas: [],
-            gastoGasolina: 0
+            gastoGasolina: 0,
+            velMax: 0
           });
         }
         
         const stat = driverStatsMap.get(driverKey)!;
         stat.totalKmFinde += ev.dist;
+        if (ev.velMax > stat.velMax) stat.velMax = ev.velMax;
         if (ev.dateOnly) stat.diasUsoFinde.add(ev.dateOnly);
         
         // Si al menos UN viaje de su fin de semana tocó geocerca, se salva de ser "Abuso Personal Puro"
@@ -269,7 +324,8 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
           origen: ev.origen,
           destino: ev.lugar,
           distancia: ev.dist,
-          geocercaDestino: ev.geocerca
+          geocercaDestino: ev.geocerca,
+          velMax: ev.velMax
         });
       }
     }
@@ -284,14 +340,11 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
   }).filter(s => s.totalKmFinde > 0); // Solo los que se movieron
 
   // 4. Rankings
-  // Top 5 Km Drivers (Independientemente de si fue proyecto o personal)
-  const top5KmDrivers = [...allDriverStats].sort((a, b) => b.totalKmFinde - a.totalKmFinde).slice(0, 5);
+  // Top 10 — SOLO los que reprobaron las 3 capas de justificación
+  const abusadores = allDriverStats.filter(s => s.isPersonalAbuse);
+  const top10Drivers = [...abusadores].sort((a, b) => b.totalKmFinde - a.totalKmFinde).slice(0, 10);
   
-  // Top Abusadores Personales (UsoPersonal = true, ordenados por Gasto/Km)
-  const topPersonalAbusers = [...allDriverStats]
-    .filter(s => s.isPersonalAbuse)
-    .sort((a, b) => b.gastoGasolina - a.gastoGasolina)
-    .slice(0, 5);
+  console.log(`[ReportEngine] Total vehículos fin de semana: ${allDriverStats.length}, Justificados: ${allDriverStats.length - abusadores.length}, Abusadores: ${abusadores.length}`);
 
   // 5. KPIs Globales
   let totalKmFindeGlobal = 0;
@@ -326,8 +379,7 @@ export function buildReportData(rawData: RawTelemetryRow[], config: ReportConfig
       sections: ["Auditoría Directiva", "Proyecto vs Personal"],
     },
     kpis,
-    top5KmDrivers,
-    topPersonalAbusers,
+    top10Drivers,
     weekendAlerts: [], stopSummaries: [], vehicleSummaries: [], scannerEvents: []
   };
 }

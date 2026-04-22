@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
-import { AlertTriangle, MapPin, Navigation, Flag } from "lucide-react";
+import { AlertTriangle, MapPin, Navigation, Flag, Filter } from "lucide-react";
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { loadGeofences, checkProximity } from "@/lib/geofenceEngine";
 
 interface RouteAggregation {
   routeKey: string;
@@ -13,6 +14,8 @@ interface RouteAggregation {
   averageDurationMinutes: number;
   tripTypeCategory: "Micro" | "Corto" | "Medio" | "Largo";
   vehicles: string[];
+  lat?: number;
+  lng?: number;
 }
 
 export function RutasPanel() {
@@ -20,6 +23,10 @@ export function RutasPanel() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDay, setFilterDay] = useState<"weekend" | "all">("all");
   const [filterCategory, setFilterCategory] = useState<string>("All");
+  
+  // Nuevo: Filtro de Geocercas
+  const [justifiedRoutes, setJustifiedRoutes] = useState<Set<string>>(new Set());
+  const [hideJustified, setHideJustified] = useState<boolean>(true);
 
   const stats = useMemo(() => {
     if (!rawParsedData) return null;
@@ -89,6 +96,12 @@ export function RutasPanel() {
           agg.durationsArr.push(durationMins);
           if (vehiculo) agg.vehicles.add(vehiculo);
 
+          // Capturar coordenadas del destino para justificación
+          const latStr = String(getField(["Latitud", "latitud", "lat"])).replace(/[^\d.-]/g, '');
+          const lngStr = String(getField(["Longitud", "longitud", "lng", "lon"])).replace(/[^\d.-]/g, '');
+          agg.lat = parseFloat(latStr);
+          agg.lng = parseFloat(lngStr);
+
           totalTripsCount++;
           if (category === "Micro") micro++;
           else if (category === "Corto") short++;
@@ -117,8 +130,10 @@ export function RutasPanel() {
         destination: agg.destination,
         tripCount: agg.tripCount,
         averageDurationMinutes: median,
-        tripTypeCategory: cat,
-        vehicles: Array.from(agg.vehicles) as string[]
+        tripTypeCategory: cat as "Micro" | "Corto" | "Medio" | "Largo",
+        vehicles: Array.from(agg.vehicles) as string[],
+        lat: agg.lat,
+        lng: agg.lng
       };
     }).sort((a, b) => b.tripCount - a.tripCount);
 
@@ -131,6 +146,36 @@ export function RutasPanel() {
       }
     };
   }, [rawParsedData, filterDay]);
+
+  // Cargar geocercas y determinar rutas justificadas
+  useEffect(() => {
+    if (!stats) return;
+    async function filterProximity() {
+      const geofences = await loadGeofences();
+      if (geofences.length === 0) return;
+
+      const justified = new Set<string>();
+      const IGNORE_GEOFENCES = ["casa", "privado", "hogar", "oxxo", "gasolinera", "7-eleven", "super", "tienda", "domicilio"];
+
+      (stats.routes as any[]).forEach(r => {
+        const anyAgg = (stats.routes as any).find((x: any) => x.routeKey === r.routeKey);
+        const lat = (r as any).lat;
+        const lng = (r as any).lng;
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const result = checkProximity(lat, lng, 0.5); // Radio 500m
+          if (result.isNearGeofence) {
+            const geoName = result.nearestGeofence.toLowerCase();
+            if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig))) {
+              justified.add(r.routeKey);
+            }
+          }
+        }
+      });
+      setJustifiedRoutes(justified);
+    }
+    filterProximity();
+  }, [stats]);
 
   if (!rawParsedData || !stats) {
     return (
@@ -151,6 +196,9 @@ export function RutasPanel() {
   const filteredRoutes = routes.filter(r => {
     const matchesSearch = r.routeKey.toLowerCase().includes(searchTerm.toLowerCase()) || r.vehicles.some(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = filterCategory === "All" || r.tripTypeCategory === filterCategory;
+    const isJustified = justifiedRoutes.has(r.routeKey);
+    
+    if (hideJustified && isJustified) return false;
     return matchesSearch && matchesCategory;
   });
 
@@ -282,8 +330,16 @@ export function RutasPanel() {
                 <option value="Micro">Micro (&lt;10m)</option>
                 <option value="Corto">Corto (10-30m)</option>
                 <option value="Medio">Medio (30-60m)</option>
-                <option value="Largo">Largo (&gt;60m)</option>
+                <option value="Largo">&gt;60m</option>
               </select>
+
+              <button 
+                onClick={() => setHideJustified(!hideJustified)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border transition-all ${hideJustified ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+              >
+                <MapPin className="w-4 h-4" />
+                {hideJustified ? `OCULTAR (${justifiedRoutes.size})` : `MOSTRAR (${justifiedRoutes.size})`}
+              </button>
 
               <input 
                 type="text" 

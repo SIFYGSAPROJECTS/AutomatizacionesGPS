@@ -1,22 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldAlert, Calendar, MapPin } from "lucide-react";
+import { ShieldAlert, Calendar, MapPin, Moon } from "lucide-react";
 import { ForensePanel } from "./ForensePanel";
 import { FinDeSemanaPanel } from "./FinDeSemanaPanel";
 import { ParadasPanel } from "./ParadasPanel";
 import { ReportesPanel } from "./ReportesPanel";
 import { RutasPanel } from "./RutasPanel";
 import { DeshorasPanel } from "./DeshorasPanel";
-import { FileBarChart, Navigation, BadgeDollarSign } from "lucide-react";
+import { PernoctasScanner } from "./PernoctasScanner";
+import { UbicacionesPanel } from "./UbicacionesPanel";
+import { BasesPanel } from "./BasesPanel";
+import { FileBarChart, Navigation, BadgeDollarSign, Map, Home } from "lucide-react";
 import { TimelineSlider } from "@/components/TimelineSlider";
 
-type AuditTab = "forense" | "finsemana" | "paradas" | "rutas" | "deshoras" | "reportes";
+type AuditTab = "forense" | "finsemana" | "pernoctas" | "rutas" | "deshoras" | "reportes";
 
 const TABS: { key: AuditTab; label: string; icon: any; description: string }[] = [
   { key: "forense", label: "Forense", icon: ShieldAlert, description: "Rachas de permanencia y auditoría por vehículo/geocerca" },
   { key: "finsemana", label: "Fin de Semana", icon: Calendar, description: "Alertas de uso no autorizado en sábados y domingos" },
-  { key: "paradas", label: "Paradas", icon: MapPin, description: "Escaneo térmico de ubicaciones y clasificación de pernoctas" },
+  { key: "pernoctas", label: "Pernoctas", icon: Moon, description: "Escáner nocturno por unidad: Validado vs Desconocido" },
   { key: "rutas", label: "Rutas", icon: Navigation, description: "Análisis de trayectos, origen-destino y duración de viajes" },
   { key: "deshoras", label: "Deshoras", icon: BadgeDollarSign, description: "Auditoría de cobros por uso de vehículos fuera de horario laboral" },
   { key: "reportes", label: "Reportes", icon: FileBarChart, description: "Generador de reportes ejecutivos en PPTX y operacionales en Excel" },
@@ -70,14 +73,14 @@ export default function AuditoriaPage() {
       </div>
 
       {/* PANEL CONTENT */}
-      <div className="min-h-[50vh]">
-        {activeTab === "forense" && <ForensePanel />}
-        {activeTab === "finsemana" && <FinDeSemanaPanel />}
-        {activeTab === "paradas" && <ParadasPanel />}
-        {activeTab === "rutas" && <RutasPanel />}
-        {activeTab === "deshoras" && <DeshorasPanel />}
-        {activeTab === "reportes" && <ReportesPanel />}
-      </div>
+        <div className="flex-1 overflow-auto custom-scrollbar p-8">
+          {activeTab === "forense" && <ForensePanel />}
+          {activeTab === "finsemana" && <FinDeSemanaPanel />}
+          {activeTab === "pernoctas" && <PernoctasScanner />}
+          {activeTab === "rutas" && <RutasPanel />}
+          {activeTab === "deshoras" && <DeshorasPanel />}
+          {activeTab === "reportes" && <ReportesPanel />}
+        </div>
     </div>
   );
 }

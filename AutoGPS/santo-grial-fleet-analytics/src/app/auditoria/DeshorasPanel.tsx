@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
-import { BadgeDollarSign, Moon, AlertTriangle, User, Map, Fuel, Truck, Calendar } from "lucide-react";
+import { BadgeDollarSign, Moon, AlertTriangle, User, Map, Fuel, Truck, Calendar, MapPin } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { loadGeofences, checkProximity } from "@/lib/geofenceEngine";
 
 interface TripDetail {
   conductor: string;
@@ -15,6 +16,9 @@ interface TripDetail {
   distancia: number;
   velMax: string;
   weekendId: string;
+  lat?: number;
+  lng?: number;
+  isJustified?: boolean;
 }
 
 interface DriverOffHoursStat {
@@ -64,6 +68,7 @@ export function DeshorasPanel() {
     const vehicleOrigins: Record<string, string> = {};
     const extractedWeekends = new Set<string>();
     const globalTrips: TripDetail[] = [];
+    const vehicleCoords: Record<string, Array<{lat: number, lng: number}>> = {};
 
     const processableRows = rawParsedData.map(row => {
       const getField = (keys: string[]) => {
@@ -152,6 +157,16 @@ export function DeshorasPanel() {
         vehicleStats[actualVehiculo].conductores.add(conductor);
         vehicleStats[actualVehiculo].diasUso.add(fecha);
         vehicleStats[actualVehiculo].finesSemana.add(weekendId);
+
+        // Capturar coordenadas para verificación de proximidad (Limpiar comillas/espacios)
+        const latStr = String(getField(["Latitud", "latitud", "lat"])).replace(/[^\d.-]/g, '');
+        const lngStr = String(getField(["Longitud", "longitud", "lng", "lon"])).replace(/[^\d.-]/g, '');
+        const lat = parseFloat(latStr);
+        const lng = parseFloat(lngStr);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          if (!vehicleCoords[actualVehiculo]) vehicleCoords[actualVehiculo] = [];
+          vehicleCoords[actualVehiculo].push({ lat, lng });
+        }
         
         globalTrips.push({
           conductor,
@@ -162,7 +177,9 @@ export function DeshorasPanel() {
           destino: lugar || "Sin dirección",
           distancia: dist,
           velMax: velMax || "-",
-          weekendId
+          weekendId,
+          lat,
+          lng
         });
 
         totalOffHoursKm += dist;
@@ -183,7 +200,7 @@ export function DeshorasPanel() {
       return v;
     }).sort((a, b) => b.totalKm - a.totalKm);
 
-    driversArray.forEach(d => totalOffHoursCost += d.cost);
+    (driversArray as any[]).forEach(d => totalOffHoursCost += d.cost);
 
     return {
       totalOffHoursKm,
@@ -192,9 +209,61 @@ export function DeshorasPanel() {
       drivers: driversArray,
       vehicles: vehiclesArray,
       trips: globalTrips.sort((a, b) => b.distancia - a.distancia),
-      availableWeekends: Array.from(extractedWeekends).sort()
+      availableWeekends: Array.from(extractedWeekends).sort(),
+      vehicleCoords
     };
   }, [rawParsedData, saturdayStartHour, sundayActive, ratePerKm, filterDay, filterWeekend, fuelPrice, fuelEfficiency]);
+
+  // Estado para el filtro de geocercas (debe estar ANTES de los early returns)
+  const [justifiedVehicles, setJustifiedVehicles] = useState<Set<string>>(new Set());
+  const [hideJustified, setHideJustified] = useState<boolean>(true);
+
+  // Cargar geocercas y determinar cuáles vehículos están justificados
+  useEffect(() => {
+    if (!stats || !stats.vehicleCoords) return;
+    async function filterByProximity() {
+      // 1. Cargar geocercas oficiales
+      await loadGeofences();
+      
+      // 2. Inyectar las casas validadas del localStorage si existen
+      const saved = localStorage.getItem("santo_grial_census_v2");
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        // El motor ya las leerá si las inyectamos adecuadamente (aunque aquí las inyectamos cada vez)
+        // Pero para esta vista local, usaremos una lógica directa
+      }
+
+      const justified = new Set<string>();
+      const IGNORE_GEOFENCES = ["casa", "privado", "hogar", "oxxo", "gasolinera", "7-eleven", "7 eleven", "super", "tienda", "domicilio"];
+
+      (stats.trips as any[]).forEach(t => {
+        // Justificación por Corredor Industrial (Si origen y destino son ciudades de trabajo conocidas)
+        const WORK_ZONES = ["minatitlan", "minatitlán", "comalcalco", "veracruz", "boca del rio", "boca del río", "coatzacoalcos", "nanchital", "villahermosa", "chihuahua", "cadereyta"];
+        const originLow = (t.origen || "").toLowerCase();
+        const destLow = (t.destino || "").toLowerCase();
+        
+        const isWorkRoute = WORK_ZONES.some(z => originLow.includes(z)) && WORK_ZONES.some(z => destLow.includes(z));
+
+        if (isWorkRoute) {
+          t.isJustified = true;
+          justified.add(t.vehiculo);
+        } else if (t.lat && t.lng && !isNaN(t.lat) && !isNaN(t.lng)) {
+          // CAPA GPS: Proximidad de 500m a geocercas maestras o censo
+          const result = checkProximity(t.lat, t.lng, 0.5);
+          if (result.isNearGeofence) {
+            const geoName = result.nearestGeofence.toLowerCase();
+            // Solo justificar si NO es una geocerca genérica (ej. un OXXO no justifica el viaje)
+            if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig))) {
+              t.isJustified = true;
+              justified.add(t.vehiculo);
+            }
+          }
+        }
+      });
+      setJustifiedVehicles(justified);
+    }
+    filterByProximity();
+  }, [stats]);
 
   if (!rawParsedData) {
     return (
@@ -210,21 +279,36 @@ export function DeshorasPanel() {
 
   if (!stats) return null;
 
-  const filteredDrivers = stats.drivers.filter(d => 
-    d.conductor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    Array.from(d.vehiculos).some(v => v.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredDrivers = stats.drivers.filter(d => {
+    const matchesSearch = d.conductor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      Array.from(d.vehiculos).some(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!matchesSearch) return false;
+    if (hideJustified) {
+      // Excluir si TODOS sus vehículos están justificados
+      const allJustified = Array.from(d.vehiculos).every(v => justifiedVehicles.has(v));
+      if (allJustified) return false;
+    }
+    return true;
+  });
 
-  const filteredVehicles = stats.vehicles.filter(v => 
-    v.vehiculo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    Array.from(v.conductores).some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredVehicles = stats.vehicles.filter(v => {
+    const matchesSearch = v.vehiculo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      Array.from(v.conductores).some(c => c.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!matchesSearch) return false;
+    if (hideJustified && justifiedVehicles.has(v.vehiculo)) return false;
+    return true;
+  });
+
+  const filteredTrips = stats.trips.filter(t => {
+    if (hideJustified && t.isJustified) return false;
+    return true;
+  });
 
   const formatMoney = (amount: number) => {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
   };
 
-  const top10 = stats.drivers.slice(0, 10);
+  const top10 = filteredDrivers.slice(0, 10);
 
   return (
     <div className="flex flex-col gap-8 pb-20 animate-in fade-in duration-500">
@@ -300,6 +384,28 @@ export function DeshorasPanel() {
                 onChange={e => setFuelPrice(parseFloat(e.target.value) || 0)}
                 className="bg-zinc-950 border border-zinc-800 text-white rounded-lg px-2 py-1.5 w-20 text-center focus:ring-1 focus:ring-emerald-500 text-sm"
               />
+            </div>
+          </div>
+
+          {/* Filtro de Geocercas */}
+          <div className="flex flex-wrap items-center gap-4 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800/50">
+            <div className="flex items-center gap-3 pr-4 border-r border-zinc-800">
+              <MapPin className="w-5 h-5 text-blue-400" />
+              <div className="hidden sm:block">
+                <h3 className="text-white font-bold text-sm">Geocercas</h3>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Filtrar Justificados</label>
+              <button 
+                onClick={() => {
+                  console.log("Toggle hideJustified:", !hideJustified);
+                  setHideJustified(!hideJustified);
+                }}
+                className={`border rounded-lg px-3 py-1.5 text-center font-bold text-sm transition-all duration-300 ${hideJustified ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+              >
+                {hideJustified ? `OCULTAR (${justifiedVehicles.size})` : `MOSTRAR (${justifiedVehicles.size})`}
+              </button>
             </div>
           </div>
         </div>
@@ -560,8 +666,8 @@ export function DeshorasPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {stats.trips.slice(0, 100).map((t, i) => (
-                <tr key={i} className="hover:bg-zinc-900/30 transition-colors">
+              {filteredTrips.slice(0, 100).map((t, i) => (
+                <tr key={i} className={`hover:bg-zinc-900/30 transition-colors ${t.isJustified ? 'opacity-60 grayscale-[0.5]' : ''}`}>
                   <td className="py-3 px-4 min-w-0">
                     <p className="text-sm font-bold text-white truncate max-w-[200px]" title={t.conductor}>{t.conductor}</p>
                     <p className="text-xs text-zinc-500 truncate mt-0.5">{t.vehiculo}</p>

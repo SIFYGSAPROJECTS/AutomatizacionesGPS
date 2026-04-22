@@ -98,13 +98,11 @@ export function analyzeWeekendUsage(
     const dayOfWeek = eventDate.getDay(); // 0 = Domingo, 6 = Sábado
     const hourOfDay = eventDate.getHours();
 
-    // =============== LÓGICA DE NEGOCIO (FILTRO DE ALERTA) ===============
-    // Los GPS suelen mandar un ping automático ("Heartbeat" de reconexión) al rotar
-    // el día a las 00:00 horas marcando la misma ubicación en la que ya estaba la unidad.
-    const esPingFantasma = (dayOfWeek === 0 && hourOfDay === 0); 
+    // Eliminamos la exclusión de las 00:00 para capturar uso real nocturno (AVH-022)
+    const esPingFantasma = false; 
     
-    // Solo marca alerta si NO es un ping fantasma
-    const esDomingo = (dayOfWeek === 0 && !esPingFantasma);
+    // Solo marca alerta si es domingo o sábado tarde
+    const esDomingo = (dayOfWeek === 0);
     const esSabadoTarde = (dayOfWeek === 6 && hourOfDay >= 14);
 
     if (!esDomingo && !esSabadoTarde) {
@@ -181,15 +179,12 @@ export function analyzeWeekendUsage(
       profile.weekendDays.push(wdd);
     }
     
-    let lastEvent = wdd.eventos[wdd.eventos.length - 1];
-    // Deduplicación (evita marcar 2 veces seguidas la misma calle)
-    if (!lastEvent || normalizeAddress(lastEvent.direccion) !== normDir) {
-      wdd.eventos.push({
-        hora,
-        direccion,
-        esDomingo
-      });
-    }
+    // Registro de CADA movimiento para análisis forense detallado (Sin deduplicación)
+    wdd.eventos.push({
+      hora,
+      direccion,
+      esDomingo
+    });
 
     // Tracker de rutas para detectar patrones en el fin de semana
     let ptrn = profile.topRoutes.find(r => normalizeAddress(r.direccion) === normDir);

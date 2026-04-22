@@ -337,7 +337,7 @@ export default function PersonalUsePage() {
                          radius={[0, 6, 6, 0]} 
                          barSize={24}
                          className="cursor-pointer hover:opacity-80 transition-opacity"
-                         onClick={(data) => {
+                         onClick={(data: any) => {
                            if(data && data.vehiculoId) {
                              setWeekendFilter({ searchQuery: data.vehiculoId });
                              window.scrollTo({ top: 300, behavior: 'smooth' }); // Pequeño scroll hacia los KPIs

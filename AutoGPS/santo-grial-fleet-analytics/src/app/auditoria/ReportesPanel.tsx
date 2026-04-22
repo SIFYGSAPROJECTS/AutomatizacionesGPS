@@ -1,14 +1,103 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
 import { extractFilterOptions, buildReportData, ReportConfig, ReportData } from "@/lib/reportDataEngine";
+import { injectValidatedHouses } from "@/lib/geofenceEngine";
 import { generateExcelReport } from "@/lib/excelReportGenerator";
 import { generatePptxReport } from "@/lib/pptxReportGenerator";
-import { FileSpreadsheet, Presentation, Calendar, Car, MapPin, CheckCircle2, ChevronRight, Activity } from "lucide-react";
+import { generateFinalMarkdownReport } from "@/lib/finalReportGenerator";
+import { Printer, FileSpreadsheet, Presentation, Calendar, Car, MapPin, CheckCircle2, ChevronRight, Activity, FileText, Copy, X, ShieldCheck, Home, Users, Check, Building2, Trash2 } from "lucide-react";
+import { detectPernoctas, DetectedHouse } from "@/lib/houseCensusEngine";
+import dynamic from "next/dynamic";
+
+const DynamicMap = dynamic(() => import("./CensusMap"), { 
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-zinc-900 animate-pulse flex items-center justify-center text-zinc-500">Cargando mapa interactivo...</div>
+});
 
 export function ReportesPanel() {
   const { rawParsedData } = useFleetStore();
+  const [detectedHouses, setDetectedHouses] = useState<DetectedHouse[]>([]);
+  const [showCensus, setShowCensus] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedHouse, setSelectedHouse] = useState<DetectedHouse | null>(null);
+
+  // MEMORIA FORENSE: Cargar validaciones previas
+  useEffect(() => {
+    const saved = localStorage.getItem("santo_grial_census_v2");
+    if (saved && detectedHouses.length > 0) {
+      const savedData = JSON.parse(saved);
+      setDetectedHouses(prev => prev.map(h => {
+        const stored = savedData[h.id];
+        if (stored) {
+          return { ...h, confirmada: stored.confirmada, tipo: stored.tipo, descartada: stored.descartada };
+        }
+        return h;
+      }));
+    }
+  }, [showCensus]);
+
+  // Guardar cambios automáticamente
+  const saveCensusProgress = (updated: DetectedHouse[]) => {
+    const dataToSave = updated.reduce((acc: any, h) => {
+      acc[h.id] = { confirmada: h.confirmada, tipo: h.tipo, descartada: h.descartada };
+      return acc;
+    }, {});
+    localStorage.setItem("santo_grial_census_v2", JSON.stringify(dataToSave));
+  };
+
+  // Ejecutar censo al abrir
+  const handleRunCensus = () => {
+    if (rawParsedData) {
+      let houses = detectPernoctas(rawParsedData);
+      
+      // Combinar con lo guardado en memoria
+      const saved = localStorage.getItem("santo_grial_census_v2");
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        houses = houses.map(h => {
+          const stored = savedData[h.id];
+          return stored ? { ...h, confirmada: stored.confirmada, tipo: stored.tipo, descartada: stored.descartada } : h;
+        });
+      }
+
+      setDetectedHouses(houses);
+      setShowCensus(true);
+      if (houses.length > 0) setSelectedHouse(houses[0]);
+    }
+  };
+
+  const toggleConfirm = (id: string) => {
+    setDetectedHouses(prev => {
+      const updated = prev.map(h => h.id === id ? { ...h, confirmada: !h.confirmada } : h);
+      saveCensusProgress(updated);
+      return updated;
+    });
+  };
+
+  const toggleDiscard = (id: string) => {
+    setDetectedHouses(prev => {
+      const updated = prev.map(h => h.id === id ? { ...h, descartada: !h.descartada } : h);
+      saveCensusProgress(updated);
+      return updated;
+    });
+  };
+
+  const changeType = (id: string, type: any) => {
+    setDetectedHouses(prev => {
+      const updated = prev.map(h => h.id === id ? { ...h, tipo: type } : h);
+      saveCensusProgress(updated);
+      return updated;
+    });
+  };
+
+  const filteredHouses = detectedHouses.filter(h => 
+    !h.descartada && (
+      h.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      h.unitStats.some(u => u.unit.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+  );
 
   const [config, setConfig] = useState<ReportConfig>({
     includeWeekend: true,
@@ -24,6 +113,10 @@ export function ReportesPanel() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPptxModal, setShowPptxModal] = useState(false);
+  const [showMarkdownModal, setShowMarkdownModal] = useState(false);
+  const [markdownText, setMarkdownText] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [previewData, setPreviewData] = useState<ReportData | null>(null);
 
   // Extraer opciones únicas del CSV crudo para los filtros
   const options = useMemo(() => {
@@ -42,14 +135,25 @@ export function ReportesPanel() {
     );
   }
 
-  // Pre-calcular vista previa
-  const previewData: ReportData | null = useMemo(() => {
-    if (!options) return null;
-    return buildReportData(rawParsedData, {
+  // Pre-calcular vista previa (ahora async por el motor de geocercas)
+  useEffect(() => {
+    if (!options || !rawParsedData) {
+      setPreviewData(null);
+      return;
+    }
+    let cancelled = false;
+    buildReportData(rawParsedData, {
       ...config,
       dateFrom: config.dateFrom || options.minDate,
       dateTo: config.dateTo || options.maxDate
+    }).then(data => {
+      // Inyectar casas validadas al motor antes de refrescar la vista previa
+      if (detectedHouses.length > 0) {
+        injectValidatedHouses(detectedHouses);
+      }
+      if (!cancelled) setPreviewData(data);
     });
+    return () => { cancelled = true; };
   }, [rawParsedData, config, options]);
 
   const handleExportPptx = async () => {
@@ -60,6 +164,25 @@ export function ReportesPanel() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleGenerateMarkdown = async () => {
+    if (!rawParsedData) return;
+    setIsGenerating(true);
+    try {
+      const text = await generateFinalMarkdownReport(rawParsedData);
+      setMarkdownText(text);
+      setShowMarkdownModal(true);
+      setCopied(false);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(markdownText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const toggleFilter = (type: 'vehicles' | 'locations', value: string) => {
@@ -80,6 +203,152 @@ export function ReportesPanel() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
+      {/* ASISTENTE DE CENSO 2.0 */}
+      <div className="bg-gradient-to-br from-[#050505] to-black border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <ShieldCheck className="w-7 h-7 text-emerald-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Asistente de Censo v2.0</h2>
+              <p className="text-xs text-zinc-500">Filtrado riguroso: Solo paradas nocturnas recurrentes.</p>
+            </div>
+          </div>
+          {!showCensus ? (
+            <button 
+              onClick={handleRunCensus}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-emerald-900/20"
+            >
+              Escanear Pernoctas
+            </button>
+          ) : (
+            <div className="flex items-center gap-4">
+               <div className="relative">
+                 <input 
+                   type="text" 
+                   placeholder="Buscar unidad o placas..." 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="bg-black border border-zinc-800 rounded-lg px-4 py-2 text-xs text-white focus:border-emerald-500 outline-none w-64"
+                 />
+               </div>
+               <button 
+                onClick={() => setShowCensus(false)}
+                className="text-zinc-500 text-sm font-bold hover:text-white"
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
+        </div>
+
+        {showCensus && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in slide-in-from-top-4 duration-500">
+            {/* COLUMNA IZQUIERDA: LISTA */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl">
+                  <p className="text-[8px] font-bold text-zinc-500 uppercase">Staff</p>
+                  <h4 className="text-sm font-bold text-white">{detectedHouses.filter(h => h.tipo === "STAFF").length}</h4>
+                </div>
+                <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl">
+                  <p className="text-[8px] font-bold text-zinc-500 uppercase">Chofer</p>
+                  <h4 className="text-sm font-bold text-white">{detectedHouses.filter(h => h.tipo === "CHOFER").length}</h4>
+                </div>
+                <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl border-emerald-500/20">
+                  <p className="text-[8px] font-bold text-emerald-500 uppercase">OK</p>
+                  <h4 className="text-sm font-bold text-emerald-500">{detectedHouses.filter(h => h.confirmada).length}</h4>
+                </div>
+              </div>
+
+              <div className="max-h-[450px] overflow-auto pr-2 custom-scrollbar space-y-2">
+                {filteredHouses.map((house) => (
+                  <div 
+                    key={house.id} 
+                    onClick={() => setSelectedHouse(house)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedHouse?.id === house.id ? 'border-emerald-500 bg-emerald-500/5' : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'}`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${house.tipo === 'STAFF' ? 'bg-blue-500/10 text-blue-500' : house.tipo === 'BASE' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                          {house.tipo === 'STAFF' ? <Users className="w-5 h-5" /> : house.tipo === 'BASE' ? <Building2 className="w-5 h-5" /> : <Home className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-zinc-100 font-bold text-[13px] block truncate mb-1">{house.direccion}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {house.unitStats.map((stat, idx) => (
+                              <span key={idx} className="px-1.5 py-0.5 rounded bg-zinc-800 text-[9px] text-zinc-300 border border-zinc-700">
+                                {stat.unit}: {stat.noches}n
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <select 
+                          value={house.tipo}
+                          onChange={(e) => changeType(house.id, e.target.value as any)}
+                          className="bg-black border border-zinc-700 text-[10px] text-zinc-300 rounded px-1.5 py-1 focus:outline-none"
+                        >
+                          <option value="STAFF">Staff</option>
+                          <option value="CHOFER">Chofer</option>
+                          <option value="BASE">Base</option>
+                        </select>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleDiscard(house.id); }}
+                          className="w-7 h-7 rounded flex items-center justify-center transition-all bg-zinc-800 text-zinc-500 hover:bg-red-500/20 hover:text-red-500"
+                          title="Marcar como falla GPS / Descartar"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleConfirm(house.id); }}
+                          className={`w-7 h-7 rounded flex items-center justify-center transition-all ${house.confirmada ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-500 hover:text-white'}`}
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* COLUMNA DERECHA: MAPA */}
+            <div className="h-[550px] bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden relative">
+               <DynamicMap 
+                 center={selectedHouse ? [selectedHouse.lat, selectedHouse.lng] : (filteredHouses.length > 0 ? [filteredHouses[0].lat, filteredHouses[0].lng] : [23.63, -102.55])}
+                 zoom={selectedHouse ? 16 : 5}
+                 markers={detectedHouses.filter(h => !h.descartada).map(h => ({
+                   lat: h.lat,
+                   lng: h.lng,
+                   title: h.direccion,
+                   color: h.tipo === 'STAFF' ? '#3B82F6' : h.tipo === 'BASE' ? '#10B981' : '#F59E0B',
+                   popup: `<strong>${h.direccion}</strong><br/>${h.unitStats.map(u => `${u.unit}: ${u.noches}n`).join('<br/>')}`
+                 }))}
+               />
+               {selectedHouse && (
+                 <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md border border-zinc-800 p-3 rounded-lg z-[1000] flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-emerald-500" />
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase leading-none mb-1">Punto Seleccionado</p>
+                        <p className="text-xs text-white font-medium truncate max-w-[200px]">{selectedHouse.direccion}</p>
+                      </div>
+                   </div>
+                   <div className="flex gap-2">
+                      <span className="px-2 py-1 bg-zinc-800 rounded text-[9px] text-zinc-400 font-mono">LAT: {selectedHouse.lat.toFixed(5)}</span>
+                      <span className="px-2 py-1 bg-zinc-800 rounded text-[9px] text-zinc-400 font-mono">LNG: {selectedHouse.lng.toFixed(5)}</span>
+                   </div>
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* COLUMNA IZQUIERDA: CONFIGURACIÓN */}
@@ -179,7 +448,7 @@ export function ReportesPanel() {
                 </div>
                 <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
                   <span className="text-sm text-zinc-500">Top Infractores</span>
-                  <span className="text-sm font-mono text-white">{previewData.top5KmDrivers.length} detectados</span>
+                  <span className="text-sm font-mono text-white">{previewData.top10Drivers.length} detectados</span>
                 </div>
               </div>
             ) : (
@@ -218,6 +487,44 @@ export function ReportesPanel() {
                 </div>
                 <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
+
+              <button
+                onClick={async () => {
+                  if (!previewData) return;
+                  setIsGenerating(true);
+                  try {
+                    await generateExcelReport(previewData, `Auditoria_GPS_${new Date().getTime()}.xlsx`);
+                  } finally {
+                    setIsGenerating(false);
+                  }
+                }}
+                disabled={isGenerating || !previewData || previewData.kpis.totalRegistrosFiltrados === 0}
+                className="w-full flex items-center justify-between px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-500 rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg shadow-emerald-900/10"
+              >
+                <div className="flex items-center gap-3">
+                  <FileSpreadsheet className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="text-sm">Descargar Excel</div>
+                    <div className="text-[10px] opacity-70 font-normal">Reporte Detallado (.xlsx)</div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+
+              <button
+                onClick={handleGenerateMarkdown}
+                disabled={isGenerating || !previewData || previewData.kpis.totalRegistrosFiltrados === 0}
+                className="w-full flex items-center justify-between px-4 py-3 bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg shadow-blue-900/10"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="text-sm">Reporte de Texto</div>
+                    <div className="text-[10px] opacity-70 font-normal">Para copiar y pegar en correo</div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             </div>
             
             {isGenerating && (
@@ -228,6 +535,60 @@ export function ReportesPanel() {
         </div>
 
       </div>
+
+      {/* MODAL REPORTE TEXTO / MARKDOWN */}
+      {showMarkdownModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0a0a0a] border border-zinc-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-[#050505]">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-500" /> Reporte Final de Auditoría
+                </h3>
+                <p className="text-xs text-zinc-500">Puedes copiar este texto para tu informe o correo electrónico.</p>
+              </div>
+              <button 
+                onClick={() => setShowMarkdownModal(false)}
+                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-auto p-6 bg-zinc-950">
+              <pre className="text-sm text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed custom-scrollbar bg-zinc-900/50 p-6 rounded-xl border border-zinc-800/50">
+                {markdownText}
+              </pre>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-zinc-800 bg-[#050505] flex justify-end">
+              <button
+                onClick={copyToClipboard}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all ${
+                  copied 
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    ¡Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" />
+                    Copiar al Portapapeles
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL VISTA PREVIA PPTX FLOTANTE */}
       {showPptxModal && previewData && (
@@ -306,10 +667,10 @@ export function ReportesPanel() {
               </div>
 
               {/* SLIDE 4: TOP CONDUCTORES */}
-              {previewData.top5KmDrivers.length > 0 && (
+              {previewData.top10Drivers.length > 0 && (
                 <div className="w-[800px] aspect-video bg-white shadow-lg relative flex flex-col border border-zinc-200 p-8 shrink-0">
                   <div className="absolute top-2 left-0 w-full h-1 bg-[#19426B]"></div>
-                  <h2 className="text-2xl font-bold text-[#19426B] font-['Arial'] mb-6">3. Top 5 Conductores: Mayor Kilometraje en Deshoras</h2>
+                  <h2 className="text-2xl font-bold text-[#19426B] font-['Arial'] mb-6">3. Top 10 Conductores: Mayor Kilometraje en Deshoras</h2>
                   
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
@@ -322,7 +683,7 @@ export function ReportesPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {previewData.top5KmDrivers.map((d, i) => (
+                      {previewData.top10Drivers.map((d: any, i: number) => (
                         <tr key={i} className="border-b border-[#EAEAEA]">
                           <td className="p-2 border-r border-[#EAEAEA] text-black font-bold">{d.conductor} <br/><span className="text-[10px] text-[#595959] font-normal">{d.vehiculo}</span></td>
                           <td className="p-2 border-r border-[#EAEAEA] text-black text-center">{d.diasUsoFinde.size}</td>
@@ -336,42 +697,6 @@ export function ReportesPanel() {
                     </tbody>
                   </table>
                   <div className="absolute bottom-2 right-4 text-[10px] text-[#595959]">Pág. 4</div>
-                </div>
-              )}
-
-              {/* SLIDE 5: ALERTA ROJA */}
-              {previewData.topPersonalAbusers.length > 0 && (
-                <div className="w-[800px] aspect-video bg-white shadow-lg relative flex flex-col border border-zinc-200 p-8 shrink-0">
-                  <div className="absolute top-2 left-0 w-full h-1 bg-[#19426B]"></div>
-                  <h2 className="text-3xl font-bold text-[#C00000] font-['Arial'] mb-2">4. ALERTA ROJA: Abuso de Uso Personal</h2>
-                  <p className="text-[#595959] mb-6 text-[12px] font-bold">Conductores que usaron la unidad en deshoras y NUNCA se presentaron a una Geocerca el día posterior.</p>
-                  
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-[#C00000] text-white">
-                        <th className="p-2 border border-[#595959]">Conductor</th>
-                        <th className="p-2 border border-[#595959] text-center">Pérdida $$</th>
-                        <th className="p-2 border border-[#595959]">Ruta Documentada (Evidencia)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewData.topPersonalAbusers.map((d, i) => (
-                        <tr key={i} className="border-b border-[#EAEAEA]">
-                          <td className="p-2 border-r border-[#EAEAEA] text-black font-bold">{d.conductor} <br/><span className="text-[10px] text-[#595959] font-normal">{d.vehiculo}</span></td>
-                          <td className="p-2 border-r border-[#EAEAEA] text-[#C00000] font-bold text-center text-lg">{formatMoney(d.gastoGasolina)}</td>
-                          <td className="p-2 text-black text-[10px] truncate max-w-[250px]">
-                            {d.rutas.length > 0 ? (
-                              <div className="flex flex-col">
-                                <span>De: {d.rutas[0].origen.substring(0,35)}...</span>
-                                <span>A: {d.rutas[0].destino.substring(0,35)}...</span>
-                              </div>
-                            ) : ""}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="absolute bottom-2 right-4 text-[10px] text-[#595959]">Pág. 5</div>
                 </div>
               )}
 

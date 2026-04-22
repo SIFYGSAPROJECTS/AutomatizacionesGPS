@@ -86,11 +86,20 @@ export function processStreaks(rawRows: RawTelemetryRow[]): AnalysisResult {
     const dateStr = horaInicial.split(" ")[0];
     if (dateStr.length < 8) return;
 
+    // Guardar fecha en formato ISO (YYYY-MM-DD) para consistencia
+    const isoDateStr = (() => {
+      const parts = dateStr.split(/[\/-]/);
+      if (parts.length === 3 && parts[0].length !== 4) {
+        return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+      }
+      return dateStr;
+    })();
+
     const matricula = getField(row, "Matrícula", "Matricula", "matrícula", "matricula");
     const parts = (matricula || "").split(" ");
     const placas = parts[0] || "";
     const consecutivo = parts[1] || "";
-    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim();
+    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículo", "vehiculo").trim() || matricula;
     const vKey = `${placas}_${consecutivo}_${vehiculo}`;
     
     if (!vehicleMeta[vKey]) {
@@ -98,15 +107,17 @@ export function processStreaks(rawRows: RawTelemetryRow[]): AnalysisResult {
     }
 
     const tiempoAparcado = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado");
-    const secs = parseDurationToSeconds(tiempoAparcado);
+    // Si no hay tiempoAparcado (como en los informes de paradas), asignamos un tiempo nominal
+    // para que la geocerca tenga al menos 1 segundo y pueda ganar como visitada.
+    const secs = tiempoAparcado ? parseDurationToSeconds(tiempoAparcado) : 1;
 
     if (!vehicleDailyData[vKey]) vehicleDailyData[vKey] = {};
-    if (!vehicleDailyData[vKey][dateStr]) vehicleDailyData[vKey][dateStr] = {};
-    if (!vehicleDailyData[vKey][dateStr][geocerca]) vehicleDailyData[vKey][dateStr][geocerca] = 0;
+    if (!vehicleDailyData[vKey][isoDateStr]) vehicleDailyData[vKey][isoDateStr] = {};
+    if (!vehicleDailyData[vKey][isoDateStr][geocerca]) vehicleDailyData[vKey][isoDateStr][geocerca] = 0;
 
     // Sumamos segundos. Limitamos agresivamente a 86,400 (24 horas) para evitar bug visual en Auditoría 
     // en caso de que telemetría lance superposiciones extremas.
-    vehicleDailyData[vKey][dateStr][geocerca] = Math.min(vehicleDailyData[vKey][dateStr][geocerca] + secs, 86400);
+    vehicleDailyData[vKey][isoDateStr][geocerca] = Math.min(vehicleDailyData[vKey][isoDateStr][geocerca] + secs, 86400);
   });
 
   const report: StreakReportRow[] = [];
@@ -198,8 +209,21 @@ function pushStreakRow(
   streak: { geocerca: string, startISO: string, lastISO: string, diasAsistidos: number },
   meta: { placas: string, consecutivo: string, vehiculo: string }
 ) {
-  const start = new Date(`${streak.startISO}T00:00:00`);
-  const end = new Date(`${streak.lastISO}T00:00:00`);
+  // Función para forzar formato YYYY-MM-DD
+  const formatDateForDateObject = (d: string) => {
+    const parts = d.split(/[\/-]/);
+    if (parts.length === 3 && parts[0].length !== 4) {
+      return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    }
+    return d;
+  };
+
+  const startStr = formatDateForDateObject(streak.startISO);
+  const endStr = formatDateForDateObject(streak.lastISO);
+
+  const start = new Date(`${startStr}T00:00:00`);
+  const end = new Date(`${endStr}T00:00:00`);
+  
   if (!isValid(start) || !isValid(end)) return;
   const diasCalendario = Math.max(1, differenceInDays(end, start) + 1);
   const formatES = (d: Date) => format(d, "dd/MM/yyyy");
