@@ -68,7 +68,8 @@ const MASTER_STAFF_HOUSES: Geofence[] = [
   { nombre: "CASA STAFF - Mérida", lat: 20.90906, lng: -89.68558, area: "Sede Maestra", grupo: "STAFF" },
   { nombre: "CASA STAFF - Villahermosa", lat: 17.89272, lng: -93.16528, area: "Sede Maestra", grupo: "STAFF" },
   { nombre: "CASA STAFF - Chihuahua Impulso", lat: 28.7481, lng: -106.1624, area: "Sede Maestra", grupo: "STAFF" },
-  { nombre: "CASA STAFF - Cadereyta Jiménez", lat: 25.591, lng: -100.001, area: "Sede Maestra", grupo: "STAFF" }
+  { nombre: "CASA STAFF - Cadereyta Jiménez", lat: 25.591, lng: -100.001, area: "Sede Maestra", grupo: "STAFF" },
+  { nombre: "CASA STAFF - Emmanuel (AVH-037)", lat: 17.99553, lng: -94.55371, area: "Minatitlán", grupo: "STAFF" }
 ];
 
 let _geofences: Geofence[] = [...MASTER_STAFF_HOUSES];
@@ -91,7 +92,7 @@ export async function loadGeofences(): Promise<Geofence[]> {
       skipEmptyLines: true,
     });
 
-    _geofences = parsed.data
+    const csvGeofences = parsed.data
       .map((row: any) => {
         const nombre = (row["Nombre zona"] || "").trim();
         const lat = parseFloat(row["Latitud"]);
@@ -105,8 +106,16 @@ export async function loadGeofences(): Promise<Geofence[]> {
       })
       .filter(Boolean) as Geofence[];
 
+    // Concatenar evitando duplicados por nombre
+    const existingNames = new Set(_geofences.map(g => g.nombre));
+    csvGeofences.forEach(cg => {
+      if (!existingNames.has(cg.nombre)) {
+        _geofences.push(cg);
+      }
+    });
+
     _loaded = true;
-    console.log(`[GeofenceEngine] ${_geofences.length} geocercas cargadas exitosamente.`);
+    console.log(`[GeofenceEngine] ${_geofences.length} geocercas totales en memoria (Oficiales + Maestras).`);
     return _geofences;
   } catch (err) {
     console.error("[GeofenceEngine] Error cargando geocercas:", err);

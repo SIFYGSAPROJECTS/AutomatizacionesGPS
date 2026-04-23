@@ -2,9 +2,12 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
-import { AlertTriangle, MapPin, Navigation, Flag, Filter } from "lucide-react";
+import { AlertTriangle, MapPin, Navigation, Flag, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { loadGeofences, checkProximity } from "@/lib/geofenceEngine";
+import dynamic from "next/dynamic";
+
+const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
 interface RouteAggregation {
   routeKey: string;
@@ -16,6 +19,8 @@ interface RouteAggregation {
   vehicles: string[];
   lat?: number;
   lng?: number;
+  originLat?: number;
+  originLng?: number;
 }
 
 export function RutasPanel() {
@@ -23,6 +28,7 @@ export function RutasPanel() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDay, setFilterDay] = useState<"weekend" | "all">("all");
   const [filterCategory, setFilterCategory] = useState<string>("All");
+  const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
   
   // Nuevo: Filtro de Geocercas
   const [justifiedRoutes, setJustifiedRoutes] = useState<Set<string>>(new Set());
@@ -49,6 +55,7 @@ export function RutasPanel() {
     }).sort((a, b) => a.timestamp - b.timestamp);
 
     const vehicleOrigins: Record<string, string> = {};
+    const vehicleOriginCoords: Record<string, {lat: number, lng: number}> = {};
     const routeMap = new Map<string, any>();
     
     let micro = 0, short = 0, medium = 0, long = 0;
@@ -97,10 +104,23 @@ export function RutasPanel() {
           if (vehiculo) agg.vehicles.add(vehiculo);
 
           // Capturar coordenadas del destino para justificación
-          const latStr = String(getField(["Latitud", "latitud", "lat"])).replace(/[^\d.-]/g, '');
-          const lngStr = String(getField(["Longitud", "longitud", "lng", "lon"])).replace(/[^\d.-]/g, '');
-          agg.lat = parseFloat(latStr);
-          agg.lng = parseFloat(lngStr);
+          // Radar de Coordenadas: Buscamos en todas las variantes posibles de Navixy/GPS
+          const latStr = String(getField(["Latitud", "latitud", "lat", "lat.", "latitude", "y"])).replace(/[^\d.-]/g, '');
+          const lngStr = String(getField(["Longitud", "longitud", "lng", "lon", "lon.", "long.", "longitude", "x"])).replace(/[^\d.-]/g, '');
+          
+          const latVal = parseFloat(latStr);
+          const lngVal = parseFloat(lngStr);
+
+          if (!isNaN(latVal) && !isNaN(lngVal) && latVal !== 0) {
+            agg.lat = latVal;
+            agg.lng = lngVal;
+          }
+
+          // Capturar origen (coordenadas del final del viaje anterior)
+          if (vehicleOriginCoords[vehiculo]) {
+            agg.originLat = vehicleOriginCoords[vehiculo].lat;
+            agg.originLng = vehicleOriginCoords[vehiculo].lng;
+          }
 
           totalTripsCount++;
           if (category === "Micro") micro++;
@@ -113,6 +133,13 @@ export function RutasPanel() {
       // Actualizar el origen para el próximo viaje del mismo vehículo
       if (lugar) {
          vehicleOrigins[vehiculo] = lugar;
+         const latStr = String(getField(["Latitud", "latitud", "lat", "lat.", "latitude", "y"])).replace(/[^\d.-]/g, '');
+         const lngStr = String(getField(["Longitud", "longitud", "lng", "lon", "lon.", "long.", "longitude", "x"])).replace(/[^\d.-]/g, '');
+         const lat = parseFloat(latStr);
+         const lng = parseFloat(lngStr);
+         if (!isNaN(lat) && !isNaN(lng) && lat !== 0) {
+           vehicleOriginCoords[vehiculo] = { lat, lng };
+         }
       }
     });
 
@@ -133,7 +160,9 @@ export function RutasPanel() {
         tripTypeCategory: cat as "Micro" | "Corto" | "Medio" | "Largo",
         vehicles: Array.from(agg.vehicles) as string[],
         lat: agg.lat,
-        lng: agg.lng
+        lng: agg.lng,
+        originLat: agg.originLat,
+        originLng: agg.originLng
       };
     }).sort((a, b) => b.tripCount - a.tripCount);
 
@@ -163,10 +192,21 @@ export function RutasPanel() {
         const lng = (r as any).lng;
 
         if (!isNaN(lat) && !isNaN(lng)) {
-          const result = checkProximity(lat, lng, 0.5); // Radio 500m
-          if (result.isNearGeofence) {
-            const geoName = result.nearestGeofence.toLowerCase();
-            if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig))) {
+          // Revisar proximidad en DESTINO
+          const destResult = checkProximity(lat, lng, 0.5);
+          
+          // Revisar proximidad en ORIGEN (si existe)
+          let originIsJustified = false;
+          if (r.originLat && r.originLng) {
+            const originResult = checkProximity(r.originLat, r.originLng, 0.5);
+            if (originResult.isNearGeofence && !IGNORE_GEOFENCES.some(ig => originResult.nearestGeofence.toLowerCase().includes(ig))) {
+              originIsJustified = true;
+            }
+          }
+
+          if (destResult.isNearGeofence) {
+            const geoName = destResult.nearestGeofence.toLowerCase();
+            if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig)) || originIsJustified) {
               justified.add(r.routeKey);
             }
           }
@@ -362,35 +402,91 @@ export function RutasPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
-                {filteredRoutes.slice(0, 100).map((r, i) => (
-                  <tr key={i} className="hover:bg-zinc-900/30 transition-colors">
-                    <td className="py-4 px-4 min-w-0">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center gap-1">
-                           <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
-                           <div className="w-px h-6 bg-zinc-800"></div>
-                           <Flag className="w-3 h-3 text-red-500" />
-                        </div>
-                        <div className="flex flex-col gap-2 w-full max-w-sm">
-                          <p className="text-sm font-medium text-zinc-300 truncate" title={r.origin}>{r.origin}</p>
-                          <p className="text-sm font-medium text-zinc-300 truncate" title={r.destination}>{r.destination}</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-zinc-600 mt-2 ml-6">Vehículos: {r.vehicles.slice(0, 3).join(", ")}{r.vehicles.length > 3 ? ` +${r.vehicles.length - 3}` : ''}</p>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="text-white font-bold text-lg">{r.tripCount}</span>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="text-zinc-300 font-mono">{formatDuration(r.averageDurationMinutes)}</span>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${getBadgeColor(r.tripTypeCategory)}`}>
-                        {r.tripTypeCategory}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filteredRoutes.slice(0, 100).map((r, i) => {
+                  const isExpanded = expandedRoute === r.routeKey;
+                  return (
+                    <tr key={i} className="w-full border-none p-0 bg-transparent">
+                      <td colSpan={4} className="p-0 border-none">
+                        <table className="w-full border-collapse">
+                          <tbody>
+                            <tr 
+                              onClick={() => setExpandedRoute(isExpanded ? null : r.routeKey)}
+                              className={`hover:bg-zinc-900/30 transition-colors cursor-pointer border-b border-zinc-800/50 ${isExpanded ? 'bg-zinc-900/40' : ''}`}
+                            >
+                              <td className="py-4 px-4 min-w-0">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col items-center gap-1">
+                                     <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
+                                     <div className="w-px h-6 bg-zinc-800"></div>
+                                     <Flag className="w-3 h-3 text-red-500" />
+                                  </div>
+                                  <div className="flex flex-col gap-2 w-full max-w-sm">
+                                    <p className="text-sm font-medium text-zinc-300 truncate" title={r.origin}>{r.origin}</p>
+                                    <p className="text-sm font-medium text-zinc-300 truncate" title={r.destination}>{r.destination}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span className="text-white font-bold text-lg">{r.tripCount}</span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span className="text-zinc-300 font-mono">{formatDuration(r.averageDurationMinutes)}</span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <div className="flex items-center justify-center gap-3">
+                                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getBadgeColor(r.tripTypeCategory)}`}>
+                                    {r.tripTypeCategory}
+                                  </span>
+                                  {isExpanded ? <ChevronUp className="w-4 h-4 text-zinc-600" /> : <ChevronDown className="w-4 h-4 text-zinc-600" />}
+                                </div>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr className="bg-zinc-950/50">
+                                <td colSpan={4} className="p-0">
+                                  <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-300">
+                                     <div className="h-[250px] bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+                                        {r.originLat && r.lat ? (
+                                          <RouteMap origin={[r.originLat, r.originLng!]} destination={[r.lat, r.lng!]} />
+                                        ) : (
+                                          <div className="flex items-center justify-center h-full text-zinc-600 text-xs italic">Coordenadas incompletas para trazar ruta</div>
+                                        )}
+                                     </div>
+                                     <div className="space-y-4">
+                                        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+                                           <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Análisis Forense de Trayecto</h4>
+                                           <div className="space-y-3">
+                                              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-2">
+                                                 <span className="text-xs text-zinc-400">Origen Conocido:</span>
+                                                 <span className={r.originLat ? "text-xs text-emerald-400 font-bold" : "text-xs text-red-400"}>
+                                                    {r.originLat ? "SI (Validado)" : "NO (Desconocido)"}
+                                                 </span>
+                                              </div>
+                                              <div className="flex justify-between items-center border-b border-zinc-800/50 pb-2">
+                                                 <span className="text-xs text-zinc-400">Destino Conocido:</span>
+                                                 <span className={r.lat ? "text-xs text-emerald-400 font-bold" : "text-xs text-red-400"}>
+                                                    {r.lat ? "SI (Validado)" : "NO (Desconocido)"}
+                                                 </span>
+                                              </div>
+                                              <div className="flex justify-between items-center">
+                                                 <span className="text-xs text-zinc-400">Estatus de Ruta:</span>
+                                                 <span className={`text-xs font-bold ${justifiedRoutes.has(r.routeKey) ? 'text-emerald-500' : 'text-orange-500 animate-pulse'}`}>
+                                                    {justifiedRoutes.has(r.routeKey) ? "AUTORIZADA POR PROXIMIDAD" : "REQUIERE JUSTIFICACIÓN"}
+                                                 </span>
+                                              </div>
+                                           </div>
+                                        </div>
+                                     </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {filteredRoutes.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-12 text-center text-zinc-500">

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { UploadCloud, FileText, CheckCircle, Save, Activity, Plus, Printer, FileSpreadsheet, X, MapPin } from "lucide-react";
+import { UploadCloud, FileText, CheckCircle, Save, Activity, Plus, Printer, FileSpreadsheet, X, MapPin, ArrowDown, ArrowUp, Calendar as CalendarIcon } from "lucide-react";
 import Papa from "papaparse";
 import ExcelJS from "exceljs";
 import { processStreaks, RawTelemetryRow, StreakReportRow } from "@/lib/streaksAnalyzer";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, subDays, startOfMonth, endOfMonth, startOfYesterday, endOfYesterday } from "date-fns";
 import dictionary from "@/lib/dictionary.json";
 import { useFleetStore } from "@/store/useFleetStore";
 import { useAnalysisHistory } from "@/hooks/useAnalysisHistory";
@@ -19,6 +19,13 @@ export function CsvUploader() {
   const [isExporting, setIsExporting] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   
+  // Filtros de Fecha
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+
+  // Estado de Ordenamiento
+  const [sortConfig, setSortConfig] = useState<{ key: keyof StreakReportRow; direction: 'asc' | 'desc' } | null>(null);
+
   // Zustand Global Store
   const { rawParsedData, streakReport, setFleetData, setStreakReport } = useFleetStore();
   const { addSnapshot } = useAnalysisHistory();
@@ -63,6 +70,24 @@ export function CsvUploader() {
           });
         });
       }
+
+      // --- ESCÁNER DE INTEGRIDAD (RAYOS X) ---
+      if (rawRows.length > 0) {
+        const firstRow = rawRows[0];
+        const columns = Object.keys(firstRow);
+        
+        const hasLat = columns.some(c => ["latitud", "lat", "lat.", "latitude", "y"].includes(c.toLowerCase().trim()));
+        const hasLng = columns.some(c => ["longitud", "lng", "lon", "lon.", "long.", "longitude", "x"].includes(c.toLowerCase().trim()));
+
+        console.log("📊 Escaneo de Columnas:", columns);
+        
+        if (!hasLat || !hasLng) {
+          alert(`⚠️ ATENCIÓN: El archivo "${file.name}" NO contiene columnas de coordenadas (Latitud/Longitud).\n\nPodrás ver las rachas y rutas, pero el MAPA y la JUSTIFICACIÓN automática no funcionarán.\n\nColumnas encontradas: ${columns.join(", ")}`);
+        } else {
+          console.log("✅ Coordenadas detectadas correctamente.");
+        }
+      }
+      // ---------------------------------------
 
       console.log(`Iniciando inyección masiva en IndexedDB con ${rawRows.length} registros...`);
       await importRawTelemetry(rawRows);
@@ -248,6 +273,59 @@ export function CsvUploader() {
     });
     setStreakReport(updated);
     setManualRacha({ Geocerca: "", Placas: "", Consecutivo: "", Vehículo: "", Inicio: "", Fin: "" });
+  };
+
+  // Lógica de Filtrado por Fecha y Ordenamiento
+  const filteredStreakReport = (streakReport || []).filter(row => {
+    if (!filterDateFrom && !filterDateTo) return true;
+    const rowStart = row.Inicio;
+    const rowEnd = row.Fin;
+    
+    let isIncluded = true;
+    if (filterDateFrom && rowStart < filterDateFrom) isIncluded = false;
+    if (filterDateTo && rowEnd > filterDateTo) isIncluded = false;
+    
+    return isIncluded;
+  }).sort((a, b) => {
+    if (!sortConfig) return 0;
+    const { key, direction } = sortConfig;
+    const valA = a[key];
+    const valB = b[key];
+
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key: keyof StreakReportRow) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const setQuickRange = (type: '7d' | 'thisMonth' | 'lastMonth' | 'all') => {
+    const today = new Date();
+    if (type === '7d') {
+      setFilterDateFrom(format(subDays(today, 7), "yyyy-MM-dd"));
+      setFilterDateTo(format(today, "yyyy-MM-dd"));
+    } else if (type === 'thisMonth') {
+      setFilterDateFrom(format(startOfMonth(today), "yyyy-MM-dd"));
+      setFilterDateTo(format(endOfMonth(today), "yyyy-MM-dd"));
+    } else if (type === 'lastMonth') {
+      const lastMonth = subDays(startOfMonth(today), 1);
+      setFilterDateFrom(format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+      setFilterDateTo(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
+    } else {
+      setFilterDateFrom("");
+      setFilterDateTo("");
+    }
+  };
+
+  const getSortIcon = (key: keyof StreakReportRow) => {
+    if (!sortConfig || sortConfig.key !== key) return <ArrowDown className="w-3 h-3 opacity-20" />;
+    return sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-orange-500" /> : <ArrowDown className="w-3 h-3 text-orange-500" />;
   };
 
   const totalRachas = streakReport ? streakReport.length : 0;
@@ -461,14 +539,42 @@ export function CsvUploader() {
               </p>
             </div>
             
-            <button 
-              onClick={() => setShowPreviewModal(true)}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#0a0a0a] text-orange-500 border border-orange-500/30 hover:bg-[#111] hover:border-orange-500/50 rounded-lg transition-colors font-medium text-sm shadow-lg disabled:opacity-50"
-            >
-               {isExporting ? <Activity className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-               Vista Previa / Exportar
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+               {/* PRESETS RÁPIDOS */}
+               <div className="flex bg-zinc-900/50 border border-zinc-800 rounded-lg p-1 gap-1">
+                 <button onClick={() => setQuickRange('7d')} className="px-3 py-1 text-[10px] font-bold text-zinc-400 hover:text-orange-500 hover:bg-zinc-800 rounded transition-all">ÚLT. 7 DÍAS</button>
+                 <button onClick={() => setQuickRange('thisMonth')} className="px-3 py-1 text-[10px] font-bold text-zinc-400 hover:text-orange-500 hover:bg-zinc-800 rounded transition-all">ESTE MES</button>
+                 <button onClick={() => setQuickRange('lastMonth')} className="px-3 py-1 text-[10px] font-bold text-zinc-400 hover:text-orange-500 hover:bg-zinc-800 rounded transition-all">MES PASADO</button>
+                 <button onClick={() => setQuickRange('all')} className="px-3 py-1 text-[10px] font-bold text-orange-500 hover:bg-orange-500/10 rounded transition-all">TODOS</button>
+               </div>
+
+               {/* FILTROS DE FECHA */}
+               <div className="flex items-center gap-2 bg-[#0a0a0a] border border-zinc-800 rounded-lg px-3 py-1.5 shadow-sm">
+                  <CalendarIcon className="w-4 h-4 text-orange-500" />
+                  <input 
+                    type="date" 
+                    value={filterDateFrom}
+                    onChange={(e) => setFilterDateFrom(e.target.value)}
+                    className="bg-transparent text-xs text-zinc-300 outline-none css-date-picker"
+                  />
+                  <span className="text-zinc-600">—</span>
+                  <input 
+                    type="date" 
+                    value={filterDateTo}
+                    onChange={(e) => setFilterDateTo(e.target.value)}
+                    className="bg-transparent text-xs text-zinc-300 outline-none css-date-picker"
+                  />
+               </div>
+
+               <button 
+                 onClick={() => setShowPreviewModal(true)}
+                 disabled={isExporting}
+                 className="flex items-center gap-2 px-5 py-2.5 bg-[#0a0a0a] text-orange-500 border border-orange-500/30 hover:bg-[#111] hover:border-orange-500/50 rounded-lg transition-colors font-medium text-sm shadow-lg disabled:opacity-50"
+               >
+                  {isExporting ? <Activity className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                  Vista Previa / Exportar
+               </button>
+            </div>
           </div>
 
           <div className="p-5 border border-zinc-800 bg-[#0a0a0a] rounded-xl">
@@ -514,19 +620,37 @@ export function CsvUploader() {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] text-zinc-500 bg-[#0a0a0a] border-b border-zinc-800 uppercase tracking-widest">
                 <tr>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Geocerca</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Placas</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Consecutivo</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Vehículo</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Inicio</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Fin</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap">Periodo</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center">Días Asis.</th>
-                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center">Días Cal.</th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Geocerca')}>
+                    <div className="flex items-center gap-2">Geocerca {getSortIcon('Geocerca')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Placas')}>
+                    <div className="flex items-center gap-2">Placas {getSortIcon('Placas')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Consecutivo')}>
+                    <div className="flex items-center gap-2">Consecutivo {getSortIcon('Consecutivo')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Vehículo')}>
+                    <div className="flex items-center gap-2">Vehículo {getSortIcon('Vehículo')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Inicio')}>
+                    <div className="flex items-center gap-2">Inicio {getSortIcon('Inicio')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Fin')}>
+                    <div className="flex items-center gap-2">Fin {getSortIcon('Fin')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Periodo')}>
+                    <div className="flex items-center gap-2">Periodo {getSortIcon('Periodo')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Días asistidos')}>
+                    <div className="flex items-center justify-center gap-2">Días Asis. {getSortIcon('Días asistidos')}</div>
+                  </th>
+                  <th className="px-4 py-3.5 font-medium whitespace-nowrap text-center cursor-pointer hover:bg-zinc-900 transition-colors" onClick={() => handleSort('Días calendario')}>
+                    <div className="flex items-center justify-center gap-2">Días Cal. {getSortIcon('Días calendario')}</div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
-                {streakReport.map((row, i) => (
+                {filteredStreakReport.map((row, i) => (
                   <tr key={i} className="hover:bg-zinc-900/70 transition-colors text-zinc-300">
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       <input list="geocercas-list" value={row.Geocerca} onChange={(e) => handleCellEdit(i, 'Geocerca', e.target.value)} size={Math.max(row.Geocerca.length, 12)} className="bg-transparent border border-transparent focus:border-orange-500/50 focus:bg-[#111] outline-none rounded px-2 py-1 transition-all text-orange-500 font-medium text-sm" />
@@ -562,7 +686,7 @@ export function CsvUploader() {
           </div>
           {/* VISTA MOBILE: Cards apiladas */}
           <div className="md:hidden space-y-3">
-            {streakReport.map((row, i) => (
+            {filteredStreakReport.map((row, i) => (
               <div key={i} className="bg-[#0a0a0a] border border-zinc-800 rounded-xl p-4 space-y-3 hover:border-orange-500/30 transition-colors">
                 {/* Geocerca + badges días */}
                 <div className="flex items-start justify-between gap-2">
@@ -604,6 +728,30 @@ export function CsvUploader() {
                 </div>
               </div>
             ))}
+          </div>
+          
+          {/* BOTONES DE NAVEGACIÓN RÁPIDA (SCROLL) */}
+          <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-[100]">
+            <button 
+              onClick={() => {
+                const container = document.getElementById('santo-grial-main-scroll');
+                if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="p-3 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-full text-zinc-400 hover:text-orange-500 hover:border-orange-500/50 shadow-2xl transition-all group"
+              title="Ir al inicio"
+            >
+              <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />
+            </button>
+            <button 
+              onClick={() => {
+                const container = document.getElementById('santo-grial-main-scroll');
+                if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+              }}
+              className="p-3 bg-orange-600/90 backdrop-blur-md border border-orange-400/50 rounded-full text-black shadow-2xl shadow-orange-600/20 hover:bg-orange-500 transition-all group"
+              title="Ir al final"
+            >
+              <ArrowDown className="w-6 h-6 group-hover:translate-y-1 transition-transform" />
+            </button>
           </div>
         </div>
       )}

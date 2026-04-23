@@ -85,18 +85,8 @@ export function FinDeSemanaPanel() {
     }
   };
 
-  if (!rawParsedData) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-20 h-20 bg-zinc-900 rounded-2xl flex items-center justify-center border border-zinc-800">
-          <AlertTriangle className="w-8 h-8 text-zinc-500" />
-        </div>
-        <h2 className="font-heading font-normal text-4xl text-white mt-4">Sin Datos</h2>
-        <p className="text-zinc-400">Sube un archivo en el Dashboard para comenzar.</p>
-      </div>
-    );
-  }
-
+  // --- HOOKS DE CÁLCULO (DEBEN IR ANTES DE CUALQUIER RETURN) ---
+  
   // Filter profiles through the search inputs
   const filteredProfiles = useMemo(() => {
     if (!weekendReport) return [];
@@ -167,18 +157,31 @@ export function FinDeSemanaPanel() {
     }));
 
     // 2. Top Infractores (Máximo 5)
-    // Extraemos su matrícula o un tramo de su vehículo para que quepa en el YAxis
     const topInfractors = [...filteredProfiles]
        .sort((a,b) => b.totalEvents - a.totalEvents)
        .slice(0, 5)
        .map(u => ({
          name: u.matricula || (u.vehiculo.length > 15 ? u.vehiculo.substring(0, 15) + "..." : u.vehiculo), 
-         vehiculoId: u.matricula || u.vehiculo, // Clave maestra para poder buscarlo interactivamente
+         vehiculoId: u.matricula || u.vehiculo, 
          alertas: u.totalEvents
        }));
 
     return { hourlyData, topInfractors };
   }, [filteredProfiles]);
+
+  // --- FIN DE HOOKS ---
+
+  if (!rawParsedData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-20 h-20 bg-zinc-900 rounded-2xl flex items-center justify-center border border-zinc-800">
+          <AlertTriangle className="w-8 h-8 text-zinc-500" />
+        </div>
+        <h2 className="font-heading font-normal text-4xl text-white mt-4">Sin Datos</h2>
+        <p className="text-zinc-400">Sube un archivo en el Dashboard para comenzar.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto pb-20">

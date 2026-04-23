@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
-import { BadgeDollarSign, Moon, AlertTriangle, User, Map, Fuel, Truck, Calendar, MapPin } from "lucide-react";
+import { BadgeDollarSign, Moon, AlertTriangle, User, Map, Fuel, Truck, Calendar, MapPin, ChevronRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { loadGeofences, checkProximity } from "@/lib/geofenceEngine";
 
@@ -168,11 +168,23 @@ export function DeshorasPanel() {
           vehicleCoords[actualVehiculo].push({ lat, lng });
         }
         
+        // Limpieza de hora (Eliminar fecha de Excel 1899 y milisegundos)
+        let horaLimpia = horaStr.replace("1899-12-30 ", "").split(".")[0]; 
+        // Si la hora aún tiene segundos :00, quitarlos para que sea HH:mm
+        const horaParts = horaLimpia.split(":");
+        if (horaParts.length >= 2) {
+          horaLimpia = `${horaParts[0].padStart(2, '0')}:${horaParts[1].padStart(2, '0')}`;
+        }
+
+        // Obtener el nombre del día abreviado (SÁB/DOM)
+        const diasSemana = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+        const nombreDia = !isNaN(parsedDate.getTime()) ? diasSemana[parsedDate.getUTCDay()] : "";
+
         globalTrips.push({
           conductor,
           vehiculo: actualVehiculo,
-          fecha: fecha || "N/A",
-          hora: horaStr,
+          fecha: fecha ? `${nombreDia} ${fecha.split(" ")[0]}` : "N/A",
+          hora: horaLimpia,
           origen: origin,
           destino: lugar || "Sin dirección",
           distancia: dist,
@@ -234,10 +246,11 @@ export function DeshorasPanel() {
       }
 
       const justified = new Set<string>();
-      const IGNORE_GEOFENCES = ["casa", "privado", "hogar", "oxxo", "gasolinera", "7-eleven", "7 eleven", "super", "tienda", "domicilio"];
+      // Palabras que NO justifican por sí solas si vienen de geocercas genéricas del GPS
+      const GENERIC_GEOFENCES = ["oxxo", "gasolinera", "7-eleven", "7 eleven", "super", "tienda", "domicilio"];
 
       (stats.trips as any[]).forEach(t => {
-        // Justificación por Corredor Industrial (Si origen y destino son ciudades de trabajo conocidas)
+        // 1. Justificación por Corredor Industrial (Zonas de trabajo)
         const WORK_ZONES = ["minatitlan", "minatitlán", "comalcalco", "veracruz", "boca del rio", "boca del río", "coatzacoalcos", "nanchital", "villahermosa", "chihuahua", "cadereyta"];
         const originLow = (t.origen || "").toLowerCase();
         const destLow = (t.destino || "").toLowerCase();
@@ -247,13 +260,20 @@ export function DeshorasPanel() {
         if (isWorkRoute) {
           t.isJustified = true;
           justified.add(t.vehiculo);
-        } else if (t.lat && t.lng && !isNaN(t.lat) && !isNaN(t.lng)) {
-          // CAPA GPS: Proximidad de 500m a geocercas maestras o censo
-          const result = checkProximity(t.lat, t.lng, 0.5);
-          if (result.isNearGeofence) {
-            const geoName = result.nearestGeofence.toLowerCase();
-            // Solo justificar si NO es una geocerca genérica (ej. un OXXO no justifica el viaje)
-            if (!IGNORE_GEOFENCES.some(ig => geoName.includes(ig))) {
+        } 
+        
+        // 2. Justificación por Proximidad a Geocercas MAESTRAS (Pernoctas y Bases)
+        if (t.lat && t.lng && !isNaN(t.lat) && !isNaN(t.lng)) {
+          const destResult = checkProximity(t.lat, t.lng, 0.5); // 500m de radio
+          
+          if (destResult.isNearGeofence) {
+            const geoName = destResult.nearestGeofence.toUpperCase();
+            
+            // SI ES CASA STAFF o BASE, SE JUSTIFICA AUTOMÁTICAMENTE
+            const isOfficialSite = geoName.includes("STAFF") || geoName.includes("BASE") || geoName.includes("OFICINA") || geoName.includes("CENSO");
+            const isGeneric = GENERIC_GEOFENCES.some(gg => geoName.toLowerCase().includes(gg));
+
+            if (isOfficialSite && !isGeneric) {
               t.isJustified = true;
               justified.add(t.vehiculo);
             }
@@ -647,63 +667,154 @@ export function DeshorasPanel() {
         </div>
       </div>
 
-      {/* BITÁCORA DETALLADA DE VIAJES */}
+      {/* BITÁCORA DETALLADA DE VIAJES (REDiseño UX 2.0) */}
       <div className="bg-[#050505] border border-zinc-900 rounded-2xl p-6 shadow-2xl flex flex-col mt-6">
-        <div className="flex flex-col mb-6 gap-2">
-          <h3 className="text-lg font-bold text-white">Bitácora Detallada de Viajes en Deshoras</h3>
-          <p className="text-xs text-zinc-500">Lista completa de los trayectos no autorizados, ordenados por los viajes más largos registrados.</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Moon className="w-5 h-5 text-orange-500" />
+              Bitácora Forense de Deshoras
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">Análisis detallado por unidad y severidad de horario.</p>
+          </div>
+          <div className="flex items-center gap-3 bg-zinc-900/50 p-1.5 rounded-xl border border-zinc-800">
+            <div className="flex items-center gap-2 px-3 py-1 border-r border-zinc-800">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Crítico</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 border-r border-zinc-800">
+              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Nocturno</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Temprano</span>
+            </div>
+          </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar max-h-[600px]">
-          <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead className="sticky top-0 bg-[#050505] z-10 shadow-sm">
-              <tr>
-                <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase">Conductor / Vehículo</th>
-                <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase">Fecha y Hora</th>
-                <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase w-1/3">Ruta (Origen a Destino)</th>
-                <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-center">Vel. Máxima</th>
-                <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase text-right">Distancia</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {filteredTrips.slice(0, 100).map((t, i) => (
-                <tr key={i} className={`hover:bg-zinc-900/30 transition-colors ${t.isJustified ? 'opacity-60 grayscale-[0.5]' : ''}`}>
-                  <td className="py-3 px-4 min-w-0">
-                    <p className="text-sm font-bold text-white truncate max-w-[200px]" title={t.conductor}>{t.conductor}</p>
-                    <p className="text-xs text-zinc-500 truncate mt-0.5">{t.vehiculo}</p>
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <p className="text-sm text-zinc-300">{t.fecha.split(" ")[0]}</p>
-                    <p className="text-xs text-orange-400 font-mono mt-0.5">{t.hora.split(" ")[1] || t.hora}</p>
-                  </td>
-                  <td className="py-3 px-4 max-w-[400px]">
-                    <div className="flex flex-col gap-1">
-                       <p className="text-xs text-zinc-500 truncate" title={t.origen}><span className="text-orange-500/50 mr-1">De:</span> {t.origen}</p>
-                       <p className="text-sm text-zinc-300 truncate" title={t.destino}><span className="text-emerald-500/50 mr-1">A:</span> {t.destino}</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <span className="text-xs text-zinc-500 border border-zinc-800 bg-zinc-900 px-2 py-1 rounded">{t.velMax}</span>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <span className="text-sm font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded">
-                      {t.distancia.toLocaleString(undefined, {maximumFractionDigits: 1})} km
+        <div className="space-y-4">
+          {/* Agrupamos los viajes filtrados por vehículo para la vista de acordeón */}
+          {Object.entries(
+            filteredTrips.reduce((acc, trip) => {
+              if (!acc[trip.vehiculo]) acc[trip.vehiculo] = [];
+              acc[trip.vehiculo].push(trip);
+              return acc;
+            }, {} as Record<string, TripDetail[]>)
+          ).map(([vehiculo, trips], idx) => (
+            <details key={idx} className="group bg-zinc-900/30 border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/30 transition-all">
+              <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50 transition-colors list-none select-none">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-black border border-zinc-800 flex items-center justify-center text-orange-500">
+                    <Truck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white leading-tight">{vehiculo}</h4>
+                    <p className="text-xs text-zinc-500">{trips[0].conductor} • {trips.length} eventos detectados</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="hidden md:flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Recorrido</span>
+                    <span className="text-lg font-mono font-bold text-zinc-200">
+                      {trips.reduce((sum, t) => sum + t.distancia, 0).toLocaleString(undefined, {maximumFractionDigits:1})} km
                     </span>
-                  </td>
-                </tr>
-              ))}
-              {stats.trips.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-zinc-500">
-                    No se encontraron viajes registrados en el horario seleccionado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-zinc-600 group-open:rotate-90 transition-transform" />
+                </div>
+              </summary>
+
+              <div className="p-6 pt-2 border-t border-zinc-800/50 bg-black/40">
+                <div className="space-y-3">
+                  {trips.map((trip, tIdx) => {
+                    const hour = parseInt(trip.hora.split(":")[0], 10);
+                    let severityColor = "bg-zinc-800 text-zinc-400 border-zinc-700";
+                    let severityLabel = "NORMAL";
+                    let severityBg = "bg-transparent";
+
+                    if (hour >= 0 && hour < 5) {
+                      severityColor = "bg-red-500/10 text-red-500 border-red-500/20";
+                      severityLabel = "🚨 CRÍTICO";
+                      severityBg = "bg-red-500/5";
+                    } else if (hour >= 22 || hour === 23) {
+                      severityColor = "bg-orange-500/10 text-orange-500 border-orange-500/20";
+                      severityLabel = "🔥 NOCTURNO";
+                      severityBg = "bg-orange-500/5";
+                    } else if (hour >= 5 && hour < 8) {
+                      severityColor = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                      severityLabel = "☀️ TEMPRANO";
+                      severityBg = "bg-amber-500/5";
+                    }
+
+                    return (
+                      <div key={tIdx} className={`flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 rounded-xl border border-zinc-800/50 hover:border-zinc-700 transition-all gap-4 ${severityBg} group/trip`}>
+                        <div className="flex items-center gap-4 min-w-[180px]">
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs font-bold text-white">{trip.fecha}</span>
+                            <span className="text-lg font-mono font-black text-orange-500 leading-tight">{trip.hora}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-tighter ${severityColor}`}>
+                            {severityLabel}
+                          </span>
+                        </div>
+
+                        <div className="flex-1 flex flex-col gap-1 min-w-0">
+                           <div className="flex items-center gap-2 text-xs text-zinc-500">
+                             <MapPin className="w-3 h-3" />
+                             <span className="truncate" title={trip.origen}>De: {trip.origen}</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></div>
+                             <span className="text-sm font-medium text-zinc-200 truncate" title={trip.destino}>A: {trip.destino}</span>
+                             {trip.isJustified ? (
+                               <span className="ml-2 flex items-center gap-1 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20 whitespace-nowrap">
+                                 ✅ JUSTIFICADO
+                               </span>
+                             ) : (
+                               <span className="ml-2 flex items-center gap-1 text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-full border border-red-500/20 whitespace-nowrap animate-pulse">
+                                 ⚠️ DESCONOCIDO
+                               </span>
+                             )}
+                           </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-right">
+                             <span className="block text-xs text-zinc-500 font-mono uppercase tracking-widest leading-none">Distancia</span>
+                             <span className="text-lg font-black text-white">{trip.distancia.toLocaleString(undefined, {maximumFractionDigits:1})} <small className="text-[10px] text-zinc-500">km</small></span>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              // Aquí podrías abrir un modal con el mapa del viaje
+                              alert(`Analizando ruta: ${trip.origen} -> ${trip.destino}`);
+                            }}
+                            className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                            title="Ver en Mapa"
+                          >
+                            <Map className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </details>
+          ))}
+          
+          {filteredTrips.length === 0 && (
+            <div className="py-20 text-center border-2 border-dashed border-zinc-900 rounded-3xl">
+              <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-8 h-8 text-zinc-700" />
+              </div>
+              <p className="text-zinc-500 font-medium">No se encontraron viajes registrados en deshoras.</p>
+            </div>
+          )}
         </div>
-        <div className="mt-4 text-xs text-zinc-500 text-right">
-          Mostrando los top 100 viajes más largos.
+
+        <div className="mt-8 flex justify-between items-center text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+          <span>Mostrando análisis forense de {filteredTrips.length} eventos</span>
+          <span>Santo Grial Fleet Analytics v3.0</span>
         </div>
       </div>
     </div>

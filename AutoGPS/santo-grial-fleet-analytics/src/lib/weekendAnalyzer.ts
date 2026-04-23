@@ -1,5 +1,6 @@
 import { isWithinInterval, parse, format } from "date-fns";
 import { RawTelemetryRow } from "./streaksAnalyzer";
+import { checkProximity, getGeofences } from "./geofenceEngine";
 
 export interface WeekendUsageReport {
   summary: {
@@ -97,10 +98,36 @@ export function analyzeWeekendUsage(
 
     const dayOfWeek = eventDate.getDay(); // 0 = Domingo, 6 = Sábado
     const hourOfDay = eventDate.getHours();
+    const minuteOfDay = eventDate.getMinutes();
 
-    // Eliminamos la exclusión de las 00:00 para capturar uso real nocturno (AVH-022)
-    const esPingFantasma = false; 
-    
+    // 1. FILTRO ANTI-FANTASMAS TOTAL (00:00)
+    // Se elimina cualquier registro de medianoche exacta ya que Navixy lo usa para cierre de día.
+    if (hourOfDay === 0 && minuteOfDay === 0) continue;
+
+    // 2. EXTRACCIÓN DE COORDENADAS PARA GEOCERCAS
+    const latStr = getField(row, "Latitud", "lat", "lat.", "latitude", "y").replace(/[^\d.-]/g, '');
+    const lngStr = getField(row, "Longitud", "lng", "lon", "lon.", "long.", "longitude", "x").replace(/[^\d.-]/g, '');
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+
+    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículos") || "Sin unidad";
+    const direccion = getField(row, "Direccion", "Dirección", "direccion") || "Sin dirección";
+    const conductor = getField(row, "Conductor", "conductor") || "Desconocido";
+
+    // 3. FILTRO DE PROXIMIDAD (Bases y Casas Staff)
+    // Si el punto está cerca de un lugar conocido (500m), no es una alerta "sucia"
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const prox = checkProximity(lat, lng, 0.5); // 500 metros de tolerancia
+      if (prox.isNearGeofence) {
+        continue; // Está en una base o casa staff, ignorar alerta
+      }
+    }
+
+    // 4. FILTRO DE TEXTO (Respaldos por nombre)
+    const normDir = normalizeAddress(direccion);
+    const isExcluded = EXCLUDED_BASES.some(base => normDir.includes(base) || direccion.toLowerCase().includes(base));
+    if (isExcluded) continue;
+
     // Solo marca alerta si es domingo o sábado tarde
     const esDomingo = (dayOfWeek === 0);
     const esSabadoTarde = (dayOfWeek === 6 && hourOfDay >= 14);
@@ -125,18 +152,9 @@ export function analyzeWeekendUsage(
       }
     }
 
-    const vehiculo = getField(row, "Vehículo", "Vehiculo", "vehículos") || "Sin unidad";
-    const direccion = getField(row, "Direccion", "Dirección", "direccion") || "Sin dirección";
-    const conductor = getField(row, "Conductor", "conductor") || "Desconocido";
-    
     // Extraer hora formateada para la renderización
     const hora = format(eventDate, "HH:mm");
     const numHora = hourOfDay;
-
-    // Ignorar bases registradas
-    const normDir = normalizeAddress(direccion);
-    const isExcluded = EXCLUDED_BASES.some(base => normDir.includes(base) || direccion.toLowerCase().includes(base));
-    if (isExcluded) continue;
 
     const unidadKey = matriculaRaw || vehiculo || "DESCONOCIDO";
 

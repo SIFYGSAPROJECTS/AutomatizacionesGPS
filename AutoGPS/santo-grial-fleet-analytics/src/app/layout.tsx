@@ -36,7 +36,7 @@ export default function RootLayout({
         <Header />
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 z-0">
+        <main id="santo-grial-main-scroll" className="flex-1 overflow-y-auto p-4 md:p-8 z-0">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>
