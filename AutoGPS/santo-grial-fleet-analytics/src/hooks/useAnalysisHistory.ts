@@ -58,7 +58,9 @@ export function useAnalysisHistory() {
     meta: Omit<AnalysisSnapshot, "id" | "timestamp">,
     report: StoredReport
   ) => {
-    const id = `analysis-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    // Generar ID determinista basado en el contenido para evitar duplicados
+    const id = `analysis-${meta.fileName}-${meta.totalRows}-${meta.dateRangeFrom}-${meta.dateRangeTo}`.replace(/[^a-zA-Z0-9]/g, '_');
+    
     const entry: AnalysisSnapshot = {
       ...meta,
       id,
@@ -68,13 +70,16 @@ export function useAnalysisHistory() {
     // SIEMPRE leer el índice fresco de localStorage, no del state
     const current = readIndex();
 
+    // Eliminar entrada previa si ya existe el mismo ID (para que el nuevo suba al tope)
+    const filtered = current.filter(s => s.id !== id);
+
     // Guardar reporte completo
     try {
       localStorage.setItem(REPORT_PREFIX + id, JSON.stringify(report));
     } catch {
-      // Si no cabe, purgar los más viejos
-      const old = [...current];
-      while (old.length > 3) {
+      // Si no cabe (QuotaExceeded), purgar los más viejos agresivamente
+      const old = [...filtered];
+      while (old.length > 2) {
         const removed = old.pop()!;
         try { localStorage.removeItem(REPORT_PREFIX + removed.id); } catch {}
       }
@@ -82,9 +87,9 @@ export function useAnalysisHistory() {
       try { localStorage.setItem(REPORT_PREFIX + id, JSON.stringify(report)); } catch {}
     }
 
-    const updated = [entry, ...current].slice(0, MAX_SESSIONS);
+    const updated = [entry, ...filtered].slice(0, MAX_SESSIONS);
 
-    // Limpiar reportes huérfanos
+    // Limpiar reportes huérfanos en localStorage
     const idsToKeep = new Set(updated.map(s => s.id));
     for (const old of current) {
       if (!idsToKeep.has(old.id)) {

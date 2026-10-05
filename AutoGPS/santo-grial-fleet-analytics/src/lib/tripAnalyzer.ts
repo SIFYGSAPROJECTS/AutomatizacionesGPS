@@ -1,4 +1,5 @@
-import { parseDateRobust, parseDurationToSeconds } from "./stopProfiler";
+import { parseDateRobust } from "./utils";
+import { parseDurationToSeconds } from "./stopProfiler";
 
 export interface TripEvent {
   vehiculo: string;

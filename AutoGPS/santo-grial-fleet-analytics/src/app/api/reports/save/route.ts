@@ -1,52 +1,37 @@
-import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-import { format } from "date-fns";
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
 
+/**
+ * Guarda el resultado de un análisis procesado en Supabase.
+ * Usa el hash del archivo como clave única para evitar duplicados.
+ */
 export async function POST(request: Request) {
   try {
-    const { csvContent, excelBase64 } = await request.json();
+    const supabase = await createClient();
+    const { hash, fileName, month, payload, auditTrail, type } = await request.json();
 
-    if (!csvContent && !excelBase64) {
-      return NextResponse.json({ error: "No content provided" }, { status: 400 });
+    if (!hash || !payload) {
+      return NextResponse.json({ error: "Faltan datos críticos (hash o payload)" }, { status: 400 });
     }
 
-    const generadosDir = path.join(process.cwd(), "generados");
-    try {
-      await fs.access(generadosDir);
-    } catch {
-      await fs.mkdir(generadosDir, { recursive: true });
-    }
+    const { data, error } = await supabase
+      .from('analysis_reports')
+      .upsert({
+        id: hash,
+        file_name: fileName,
+        month: month,
+        report_type: type || 'general',
+        data: payload,
+        audit_trail: auditTrail,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+      .select();
 
-    const now = new Date();
-    
-    // Guardado de Excel Binario (.xlsx)
-    if (excelBase64) {
-      const filename = `Analisis_Rachas_${format(now, "dd-MM-yyyy_HH-mm-ss")}.xlsx`;
-      const filePath = path.join(generadosDir, filename);
-      
-      const buffer = Buffer.from(excelBase64, 'base64');
-      await fs.writeFile(filePath, buffer);
-      
-      return NextResponse.json({ success: true, message: "Excel guardado", filename }, { status: 200 });
-    }
+    if (error) throw error;
 
-    // Guardado Legacy de CSV (.csv)
-    if (csvContent) {
-      const filename = `Analisis_Rachas_${format(now, "dd-MM-yyyy_HH-mm-ss")}.csv`;
-      const filePath = path.join(generadosDir, filename);
-      const bom = "\uFEFF";
-      const dataToWrite = csvContent.startsWith(bom) ? csvContent : bom + csvContent;
-      await fs.writeFile(filePath, dataToWrite, "utf-8");
-      
-      return NextResponse.json({ success: true, message: "CSV guardado", filename }, { status: 200 });
-    }
-
+    return NextResponse.json({ success: true, data });
   } catch (error: any) {
-    console.error("Failed to save report locally:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error.message },
-      { status: 500 }
-    );
+    console.error("Error saving report to Supabase:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

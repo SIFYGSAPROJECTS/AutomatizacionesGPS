@@ -15,15 +15,23 @@ export default function Home() {
   const rachasCount = streakReport ? streakReport.length : 0;
   const basesCount = auditTrail ? Object.keys(auditTrail.byGeocerca).length : 0;
 
-  const handleLoadSession = (snap: AnalysisSnapshot) => {
+  const handleLoadSession = async (snap: AnalysisSnapshot) => {
     const report = loadReport(snap.id);
     if (!report) {
       alert("No se pudo cargar este reporte. Es posible que los datos hayan sido purgados del navegador.");
       return;
     }
+    
     const date = new Date(snap.timestamp);
     const dateStr = date.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
-    restoreHistorical(report.streakReport, report.auditTrail, snap.fileName + " — " + dateStr);
+    
+    // 1. Primero restauramos los metadatos históricos (Rachas y Auditoría guardada)
+    restoreHistorical(report.streakReport, report.auditTrail, snap.fileName + " — " + dateStr, snap.id);
+    
+    // 2. Cargamos automáticamente los datos de telemetría de la DB para alimentar los otros paneles (Rutas/Deshoras)
+    if (snap.dateRangeFrom && snap.dateRangeTo) {
+        await useFleetStore.getState().loadDataFromDb(snap.dateRangeFrom, snap.dateRangeTo);
+    }
   };
 
   return (
@@ -116,7 +124,7 @@ export default function Home() {
               const date = new Date(snap.timestamp);
               const dateStr = date.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
               const timeStr = date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-              const isActiveSession = isHistoricalView && historicalLabel === snap.fileName + " — " + dateStr;
+              const isActiveSession = isHistoricalView && useFleetStore.getState().historicalId === snap.id;
 
               return (
                 <div

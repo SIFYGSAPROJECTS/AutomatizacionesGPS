@@ -1,20 +1,48 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, Truck, Menu, X, LayoutDashboard, Eye } from 'lucide-react';
+import { User, Truck, Menu, X, LayoutDashboard, Eye, Calendar, ChevronDown } from 'lucide-react';
 import { useFleetStore } from "@/store/useFleetStore";
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // Status global de telemetría (Zustand)
+  
+  // Estado global y acciones del Store
   const hasData = useFleetStore(s => s.rawParsedData !== null || s.isHistoricalView);
+  const { availableMonths, globalDateRange, setGlobalDateRange, loadDataFromDb, scanAvailableMonths, clearData } = useFleetStore();
 
-  const navLinks = [
+  // Escanear meses disponibles al cargar la app
+  useEffect(() => {
+    scanAvailableMonths();
+  }, [scanAvailableMonths]);
+
+  const handleMonthChange = async (monthStr: string) => {
+    // 1. Limpiar datos actuales para evitar conflictos visuales
+    clearData();
+    
+    // 2. Establecer el nuevo rango
+    const from = `${monthStr}-01`;
+    const to = `${monthStr}-31`;
+    
+    setGlobalDateRange({ from, to });
+    
+    // 3. Cargar desde DB (Dexie)
+    await loadDataFromDb(from, to);
+    
+    // 4. Forzar re-escaneo por si acaso
+    await scanAvailableMonths();
+  };
+
+  const currentMonthLabel = globalDateRange 
+    ? new Date(globalDateRange.from + 'T00:00:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+    : 'Seleccionar Mes';
+
+  const navLinks: { href: string; label: string; icon: any; requireData?: boolean }[] = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/auditoria', label: 'Auditoría', icon: Eye, requireData: true },
+    { href: '/auditoria', label: 'Auditoría', icon: Eye },
   ];
 
   return (
@@ -66,6 +94,32 @@ export function Header() {
 
           {/* Right Side Info & Mobile Toggle */}
           <div className="flex items-center gap-4">
+
+            {/* SELECTOR DE MESES (Solución para ver Enero, Febrero, Marzo...) */}
+            {availableMonths.length > 0 && (
+              <div className="relative group flex items-center">
+                <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl text-zinc-100 hover:border-orange-500/50 transition-all cursor-pointer">
+                  <Calendar className="w-4 h-4 text-orange-500" />
+                  <span className="text-xs font-bold uppercase tracking-widest">{currentMonthLabel}</span>
+                  <ChevronDown className="w-3 h-3 text-zinc-500 group-hover:rotate-180 transition-transform" />
+                </div>
+                
+                <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
+                  {availableMonths.map((m) => {
+                    const isSelected = globalDateRange?.from.startsWith(m);
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => handleMonthChange(m)}
+                        className={`w-full px-4 py-3 text-left text-xs font-bold uppercase tracking-widest hover:bg-orange-500/10 transition-colors border-b border-zinc-800/50 last:border-0 ${isSelected ? 'text-orange-500 bg-orange-500/5' : 'text-zinc-400'}`}
+                      >
+                        {new Date(m + '-01T00:00:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="hidden sm:flex items-center text-[10px] bg-[#111] border border-orange-900/30 px-3 py-1.5 rounded-full text-orange-500 mr-2 uppercase tracking-widest font-bold">
               <span className="relative flex h-2 w-2 mr-2">

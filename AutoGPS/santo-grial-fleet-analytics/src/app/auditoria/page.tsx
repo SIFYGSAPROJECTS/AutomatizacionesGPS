@@ -11,10 +11,11 @@ import { DeshorasPanel } from "./DeshorasPanel";
 import { PernoctasScanner } from "./PernoctasScanner";
 import { UbicacionesPanel } from "./UbicacionesPanel";
 import { BasesPanel } from "./BasesPanel";
-import { FileBarChart, Navigation, BadgeDollarSign, Map, Home } from "lucide-react";
+import { UltimaPosicionPanel } from "./UltimaPosicionPanel";
+import { FileBarChart, Navigation, BadgeDollarSign, Map, Home, MapPin as MapPinIcon } from "lucide-react";
 import { TimelineSlider } from "@/components/TimelineSlider";
 
-type AuditTab = "forense" | "finsemana" | "pernoctas" | "rutas" | "deshoras" | "reportes";
+type AuditTab = "forense" | "finsemana" | "pernoctas" | "rutas" | "deshoras" | "reportes" | "ultimapos";
 
 const TABS: { key: AuditTab; label: string; icon: any; description: string }[] = [
   { key: "forense", label: "Forense", icon: ShieldAlert, description: "Rachas de permanencia y auditoría por vehículo/geocerca" },
@@ -22,6 +23,7 @@ const TABS: { key: AuditTab; label: string; icon: any; description: string }[] =
   { key: "pernoctas", label: "Pernoctas", icon: Moon, description: "Escáner nocturno por unidad: Validado vs Desconocido" },
   { key: "rutas", label: "Rutas", icon: Navigation, description: "Análisis de trayectos, origen-destino y duración de viajes" },
   { key: "deshoras", label: "Deshoras", icon: BadgeDollarSign, description: "Auditoría de cobros por uso de vehículos fuera de horario laboral" },
+  { key: "ultimapos", label: "Última Posición", icon: MapPinIcon, description: "Instantánea en vivo de la última ubicación conocida de cada unidad" },
   { key: "reportes", label: "Reportes", icon: FileBarChart, description: "Generador de reportes ejecutivos en PPTX y operacionales en Excel" },
 ];
 
@@ -78,8 +80,9 @@ export default function AuditoriaPage() {
           {activeTab === "finsemana" && <FinDeSemanaPanel />}
           {activeTab === "pernoctas" && <PernoctasScanner />}
           {activeTab === "rutas" && <RutasPanel />}
-          {activeTab === "deshoras" && <DeshorasPanel />}
-          {activeTab === "reportes" && <ReportesPanel />}
+          { activeTab === "deshoras" && <DeshorasPanel />}
+          { activeTab === "ultimapos" && <UltimaPosicionPanel />}
+          { activeTab === "reportes" && <ReportesPanel />}
         </div>
     </div>
   );

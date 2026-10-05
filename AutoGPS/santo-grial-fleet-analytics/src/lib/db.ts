@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { parseDateRobust } from './utils';
 
 // Define the exact shape we will store in IndexedDB
 export interface TelemetryEventRecord {
@@ -86,15 +87,11 @@ export async function importRawTelemetry(rawRows: Record<string, string>[]) {
     // Intentar sacar la fecha (YYYY-MM-DD)
     const parseYYYYMMDD = (val: string) => {
         if (!val) return "";
-        try {
-            const d = new Date(val);
-            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-        } catch(e) {}
-        const match = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-        if (match) {
-            const day = match[1].padStart(2, '0');
-            const month = match[2].padStart(2, '0');
-            const year = match[3];
+        const d = parseDateRobust(val);
+        if (!isNaN(d.getTime())) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
         return "";
@@ -135,4 +132,10 @@ export async function importRawTelemetry(rawRows: Record<string, string>[]) {
 
   // Insertar por lotes (Dexie es MUY rápido, bulkPut hace upsert y sobreescribe duplicados exactos)
   await db.telemetry.bulkPut(records);
+}
+
+// Función para limpieza total solicitada por el usuario
+export async function clearAllTelemetry() {
+  await db.telemetry.clear();
+  console.log("🧹 Base de datos de telemetría vaciada correctamente.");
 }

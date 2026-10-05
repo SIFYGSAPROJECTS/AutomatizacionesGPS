@@ -20,6 +20,7 @@
     "APBJ-12-ECO-CAS",
     "APBJ-14-ECO-JUJO",
     "APCP-01-B&C-BLA",
+    "APCP-01-B&amp;C-BLA",
     "APCP-02-ECO-CP1",
     "APCP-03-B&C-GUA",
     "APMM-01-BSE-AGV",
@@ -53,6 +54,7 @@
     "prueba 1"
   ],
   "vehiculos": [
+    "F-150",
     "FORD F-150 BLANCO OXFORD",
     "FORD F-350 BLANCO OXFORD",
     "FORD RANGER AZUL",
@@ -70,16 +72,27 @@
     "FORD RANGER XLT BLANCO NIEVE",
     "FORD TRANSIT BLANCO",
     "FORD TRANSIT BLANCO NIEVE",
+    "Fiat FORD RANGER AZUL RELAMPAGO",
+    "Fiat FORD RANGER BLANCO NIEVE",
+    "Ford RANGER AZUL RELAMPAGO",
+    "Ford RANGER BLANCO NIEVE",
+    "Ford RANGER NEGRO APERLADO",
     "Ford Ranger XL Azul relampago",
+    "Ford TRANSIT BLANCO",
+    "Ford TRANSIT BLANCO NIEVE",
+    "JAC FRISON BLANCO",
     "MITSUBISHI L200 Withe Solid",
     "Mitsubishi L200 White solid",
+    "Mitsubishi L200 Withe Solid",
     "NBM785C F&G-028",
     "NISSAN NP300 BLANCO",
     "RANGER BLANCO NIEVE",
+    "RENAULT KWID BITONO",
     "TOYOTA HIACE",
     "TOYOTA HILUX BLANCO",
     "TOYOTA HILUX GRIS",
     "VOLKSWAGEN VIRTUS BLANCO CANDY",
+    "Volkswagen VIRTUS BLANCO CANDY",
     "XH5164B AVH-041",
     "XH5279B AVH-040",
     "XM6772A AVH-021",
@@ -119,6 +132,10 @@
   ],
   "placas": [
     "NBM785C",
+    "ROBO",
+    "SINIESTRO/YH7799A",
+    "TALLER/YLN739A",
+    "TALLER/Z56BPL",
     "XH5164B",
     "XH5279B",
     "XM6772A",
@@ -149,6 +166,7 @@
     "XW8993A",
     "XY4793A",
     "YDP622B",
+    "YGB396C",
     "YH6813A",
     "YH6828A",
     "YH6843A",
@@ -168,6 +186,7 @@
     "Z60BPL"
   ],
   "consecutivos": [
+    "/XR6246A",
     "AVH-018",
     "AVH-019",
     "AVH-021",
@@ -198,6 +217,7 @@
     "AVH-050",
     "AVH-051",
     "AVH-052",
+    "AVH-062",
     "F&G-005",
     "F&G-006",
     "F&G-011",
@@ -224,9 +244,165 @@
       "Vehículo": "TOYOTA HIACE"
     },
     {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "NBM785C",
+      "Consecutivo": "F&G-028",
+      "Vehículo": "TOYOTA HIACE",
+      "Mes": "2026-06"
+    },
+    {
+      "Placas": "ROBO",
+      "Consecutivo": "/XR6246A",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "ROBO",
+      "Consecutivo": "/XR6246A",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "ROBO",
+      "Consecutivo": "/XR6246A",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-06"
+    },
+    {
+      "Placas": "SINIESTRO/YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "SINIESTRO/YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "TALLER/YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "Ford TRANSIT BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "TALLER/YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "Ford TRANSIT BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "TALLER/YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "Ford TRANSIT BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
+      "Placas": "TALLER/Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "TALLER/Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "TALLER/Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XH5164B",
       "Consecutivo": "AVH-041",
       "Vehículo": "FORD RANGER GRIS MERCURIO"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XH5164B",
+      "Consecutivo": "AVH-041",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XH5279B",
@@ -234,9 +410,129 @@
       "Vehículo": "FORD RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XH5279B",
+      "Consecutivo": "AVH-040",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XM6772A",
       "Consecutivo": "AVH-021",
       "Vehículo": "FORD RANGER XL BLANCO NIEVE"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XM6772A",
+      "Consecutivo": "AVH-021",
+      "Vehículo": "FORD RANGER XL BLANCO NIEVE",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XM6773A",
@@ -244,9 +540,129 @@
       "Vehículo": "FORD RANGER ROJO MEXICANO"
     },
     {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XM6773A",
+      "Consecutivo": "AVH-022",
+      "Vehículo": "FORD RANGER ROJO MEXICANO",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XM6775A",
       "Consecutivo": "AVH-019",
       "Vehículo": "FORD RANGER XLT BLANCO NIEVE"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XM6775A",
+      "Consecutivo": "AVH-019",
+      "Vehículo": "FORD RANGER XLT BLANCO NIEVE",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XM6777A",
@@ -254,14 +670,170 @@
       "Vehículo": "FORD F-350 BLANCO OXFORD"
     },
     {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XM6777A",
+      "Consecutivo": "AVH-018",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XP0337B",
       "Consecutivo": "AVH-044",
       "Vehículo": "FORD F-350 BLANCO OXFORD"
     },
     {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XP0337B",
+      "Consecutivo": "AVH-044",
+      "Vehículo": "FORD F-350 BLANCO OXFORD",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XP0443B",
       "Consecutivo": "AVH-045",
       "Vehículo": "FORD RANGER XLT"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XP0443B",
+      "Consecutivo": "AVH-045",
+      "Vehículo": "FORD RANGER XLT",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XP0446B",
@@ -274,9 +846,129 @@
       "Vehículo": "FORD RANGER GRIS MERCURIO"
     },
     {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XP0447B",
+      "Consecutivo": "F&G-013",
+      "Vehículo": "FORD RANGER GRIS MERCURIO",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XP0502B",
       "Consecutivo": "F&G-020",
       "Vehículo": "FORD RANGER ROJO CEREZA"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XP0502B",
+      "Consecutivo": "F&G-020",
+      "Vehículo": "FORD RANGER ROJO CEREZA",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XR3112B",
@@ -284,9 +976,129 @@
       "Vehículo": "FORD RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XR3112B",
+      "Consecutivo": "F&G-023",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XR6245A",
       "Consecutivo": "AVH-024",
       "Vehículo": "FORD F-150 BLANCO OXFORD"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "F-150",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "F-150",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "F-150",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "F-150",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XR6245A",
+      "Consecutivo": "AVH-024",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XR6246A",
@@ -294,9 +1106,111 @@
       "Vehículo": "FORD F-150 BLANCO OXFORD"
     },
     {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XR6246A",
+      "Consecutivo": "AVH-025",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-03"
+    },
+    {
       "Placas": "XR6616A",
       "Consecutivo": "AVH-023",
       "Vehículo": "FORD RANGER XL AZUL RELAMPAGO"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XR6616A",
+      "Consecutivo": "AVH-023",
+      "Vehículo": "FORD RANGER XL AZUL RELAMPAGO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XS2534B",
@@ -304,9 +1218,129 @@
       "Vehículo": "TOYOTA HILUX BLANCO"
     },
     {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XS2534B",
+      "Consecutivo": "AVH-049",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XS2636B",
       "Consecutivo": "AVH-047",
       "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XS2636B",
+      "Consecutivo": "AVH-047",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XS2637B",
@@ -314,9 +1348,129 @@
       "Vehículo": "FORD RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XS2637B",
+      "Consecutivo": "AVH-046",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XS2638B",
       "Consecutivo": "AVH-048",
       "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XS2638B",
+      "Consecutivo": "AVH-048",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XT1304B",
@@ -324,9 +1478,129 @@
       "Vehículo": "FORD RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "Fiat FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XT1304B",
+      "Consecutivo": "AVH-050",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XT1305B",
       "Consecutivo": "AVH-051",
       "Vehículo": "FORD RANGER BLANCO NIEVE"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XT1305B",
+      "Consecutivo": "AVH-051",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XT1306B",
@@ -339,9 +1613,81 @@
       "Vehículo": "TOYOTA HILUX GRIS"
     },
     {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XU0933B",
+      "Consecutivo": "F&G-024",
+      "Vehículo": "TOYOTA HILUX GRIS",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "XU0936B",
       "Consecutivo": "F&G-027",
       "Vehículo": "TOYOTA HILUX BLANCO"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XU0936B",
+      "Consecutivo": "F&G-027",
+      "Vehículo": "TOYOTA HILUX BLANCO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XW0747A",
@@ -359,9 +1705,93 @@
       "Vehículo": ""
     },
     {
+      "Placas": "XW8977A",
+      "Consecutivo": "AVH-028",
+      "Vehículo": "JAC FRISON BLANCO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XW8977A",
+      "Consecutivo": "AVH-028",
+      "Vehículo": "JAC FRISON BLANCO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XW8977A",
+      "Consecutivo": "AVH-028",
+      "Vehículo": "JAC FRISON BLANCO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XW8977A",
+      "Consecutivo": "AVH-028",
+      "Vehículo": "JAC FRISON BLANCO",
+      "Mes": "2025-12"
+    },
+    {
       "Placas": "XW8993A",
       "Consecutivo": "AVH-029",
       "Vehículo": "Mitsubishi L200 White solid"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "XW8993A",
+      "Consecutivo": "AVH-029",
+      "Vehículo": "Mitsubishi L200 White solid",
+      "Mes": "2026-06"
     },
     {
       "Placas": "XY4793A",
@@ -369,9 +1799,69 @@
       "Vehículo": "FORD RANGER BLANCO"
     },
     {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "XY4793A",
+      "Consecutivo": "VSI-028",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-05"
+    },
+    {
       "Placas": "YDP622B",
       "Consecutivo": "F&G-005",
       "Vehículo": ""
+    },
+    {
+      "Placas": "YGB396C",
+      "Consecutivo": "AVH-062",
+      "Vehículo": "RENAULT KWID BITONO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YH6813A",
@@ -379,9 +1869,129 @@
       "Vehículo": "FORD RANGER BLANCO"
     },
     {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6813A",
+      "Consecutivo": "VSI-029",
+      "Vehículo": "FORD RANGER BLANCO",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YH6828A",
       "Consecutivo": "AVH-033",
       "Vehículo": "FORD RANGER NEGRO APERLADO"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "FORD RANGER NEGRO APERLADO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "Ford RANGER NEGRO APERLADO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "Ford RANGER NEGRO APERLADO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6828A",
+      "Consecutivo": "AVH-033",
+      "Vehículo": "Ford RANGER NEGRO APERLADO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YH6843A",
@@ -389,9 +1999,129 @@
       "Vehículo": "FORD RANGER AZUL RELAMPAGO"
     },
     {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "Fiat FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "Ford RANGER AZUL RELAMPAGO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6843A",
+      "Consecutivo": "AVH-035",
+      "Vehículo": "Ford RANGER AZUL RELAMPAGO",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YH6844A",
       "Consecutivo": "AVH-034",
       "Vehículo": "FORD RANGER AZUL RELAMPAGO"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6844A",
+      "Consecutivo": "AVH-034",
+      "Vehículo": "FORD RANGER AZUL RELAMPAGO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YH6845A",
@@ -399,9 +2129,129 @@
       "Vehículo": "FORD RANGER AZUL"
     },
     {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6845A",
+      "Consecutivo": "AVH-036",
+      "Vehículo": "FORD RANGER AZUL",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YH6862A",
       "Consecutivo": "AVH-037",
       "Vehículo": "FORD F-150 BLANCO OXFORD"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6862A",
+      "Consecutivo": "AVH-037",
+      "Vehículo": "FORD F-150 BLANCO OXFORD",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YH6887A",
@@ -414,14 +2264,182 @@
       "Vehículo": "FORD RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "Fiat FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "Fiat FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH6888A",
+      "Consecutivo": "AVH-038",
+      "Vehículo": "FORD RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YH7798A",
       "Consecutivo": "F&G-021",
       "Vehículo": "RANGER BLANCO NIEVE"
     },
     {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "RANGER BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "Ford RANGER BLANCO NIEVE",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "Ford RANGER BLANCO NIEVE",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YH7798A",
+      "Consecutivo": "F&G-021",
+      "Vehículo": "Ford RANGER BLANCO NIEVE",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YH7799A",
       "Consecutivo": "F&G-022",
       "Vehículo": "FORD RANGER PLATA"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YH7799A",
+      "Consecutivo": "F&G-022",
+      "Vehículo": "FORD RANGER PLATA",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YHG998B",
@@ -434,9 +2452,129 @@
       "Vehículo": "MITSUBISHI L200 Withe Solid"
     },
     {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "MITSUBISHI L200 Withe Solid",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "Mitsubishi L200 Withe Solid",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "Mitsubishi L200 Withe Solid",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YJ6385A",
+      "Consecutivo": "AVH-032",
+      "Vehículo": "Mitsubishi L200 Withe Solid",
+      "Mes": "2026-06"
+    },
+    {
       "Placas": "YLN142A",
       "Consecutivo": "F&G-012",
       "Vehículo": "FORD TRANSIT BLANCO"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "FORD TRANSIT BLANCO",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "Ford TRANSIT BLANCO",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "Ford TRANSIT BLANCO",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "YLN142A",
+      "Consecutivo": "F&G-012",
+      "Vehículo": "Ford TRANSIT BLANCO",
+      "Mes": "2026-06"
     },
     {
       "Placas": "YLN739A",
@@ -444,9 +2582,111 @@
       "Vehículo": "FORD TRANSIT BLANCO NIEVE"
     },
     {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "YLN739A",
+      "Consecutivo": "F&G-011",
+      "Vehículo": "FORD TRANSIT BLANCO NIEVE",
+      "Mes": "2026-03"
+    },
+    {
       "Placas": "Z54BPL",
       "Consecutivo": "F&G-017",
       "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "Z54BPL",
+      "Consecutivo": "F&G-017",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-06"
     },
     {
       "Placas": "Z56BPL",
@@ -454,9 +2694,111 @@
       "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
     },
     {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "Z56BPL",
+      "Consecutivo": "F&G-018",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-03"
+    },
+    {
       "Placas": "Z60BPL",
       "Consecutivo": "F&G-016",
       "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-09"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-10"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-11"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2025-12"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-01"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-02"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "VOLKSWAGEN VIRTUS BLANCO CANDY",
+      "Mes": "2026-03"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-04"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-05"
+    },
+    {
+      "Placas": "Z60BPL",
+      "Consecutivo": "F&G-016",
+      "Vehículo": "Volkswagen VIRTUS BLANCO CANDY",
+      "Mes": "2026-06"
     }
   ]
 }

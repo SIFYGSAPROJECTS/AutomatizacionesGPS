@@ -98,7 +98,9 @@ export function FinDeSemanaPanel() {
       filtered = filtered.filter(p => 
         p.vehiculo.toLowerCase().includes(q) || 
         (p.matricula && p.matricula.toLowerCase().includes(q)) ||
-        (p.conductor && p.conductor.toLowerCase().includes(q))
+        (p.conductor && p.conductor.toLowerCase().includes(q)) ||
+        (p.consecutivo && p.consecutivo.toLowerCase().includes(q)) ||
+        (p.modelo && p.modelo.toLowerCase().includes(q))
       );
     }
 
@@ -161,8 +163,8 @@ export function FinDeSemanaPanel() {
        .sort((a,b) => b.totalEvents - a.totalEvents)
        .slice(0, 5)
        .map(u => ({
-         name: u.matricula || (u.vehiculo.length > 15 ? u.vehiculo.substring(0, 15) + "..." : u.vehiculo), 
-         vehiculoId: u.matricula || u.vehiculo, 
+         name: (u.consecutivo && u.consecutivo !== "Sin consecutivo") ? u.consecutivo : (u.matricula || (u.vehiculo.length > 15 ? u.vehiculo.substring(0, 15) + "..." : u.vehiculo)), 
+         vehiculoId: u.consecutivo && u.consecutivo !== "Sin consecutivo" ? u.consecutivo : (u.matricula || u.vehiculo), 
          alertas: u.totalEvents
        }));
 
@@ -384,9 +386,11 @@ export function FinDeSemanaPanel() {
                       <Car className="w-5 h-5 text-orange-500" />
                     </div>
                     <div>
-                      <h3 className="text-zinc-100 font-semibold">{unit.vehiculo}</h3>
+                      <h3 className="text-zinc-100 font-semibold">
+                        {unit.consecutivo !== "Sin consecutivo" ? `[${unit.consecutivo}] ` : ""}{unit.modelo}
+                      </h3>
                       <p className="text-zinc-500 text-sm">
-                        {unit.matricula} • {unit.conductor || "Sin conductor"}
+                        Placas: {unit.matricula} • Conductor: {unit.conductor || "Sin conductor"} • Sistema: {unit.vehiculo}
                       </p>
                     </div>
                   </div>
@@ -521,12 +525,15 @@ export function FinDeSemanaPanel() {
 
                 {/* A4 Table */}
                 <h2 className="text-sm uppercase font-bold text-gray-900 mb-4 tracking-wider">Top Unidades con Mayor Incidencia</h2>
-                <table className="w-full text-left text-sm border-collapse">
+                <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-blue-900 text-white">
-                      <th className="p-3 border border-blue-800 w-1/3">Unidad / Conductor</th>
-                      <th className="p-3 border border-blue-800 text-center w-1/4">Gravedad de Abuso</th>
-                      <th className="p-3 border border-blue-800">Foco Principal (Dirección)</th>
+                    <tr className="bg-blue-900 text-white uppercase">
+                      <th className="p-3 border border-blue-800 text-center">Consecutivo</th>
+                      <th className="p-3 border border-blue-800">Conductor</th>
+                      <th className="p-3 border border-blue-800">Modelo/Tipo</th>
+                      <th className="p-3 border border-blue-800">Matrícula</th>
+                      <th className="p-3 border border-blue-800 text-center">Gravedad</th>
+                      <th className="p-3 border border-blue-800">Ubicación Principal</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -535,19 +542,19 @@ export function FinDeSemanaPanel() {
                        const pct = Math.min(100, Math.max(5, (u.totalEvents / maxAlerts) * 100));
                        return (
                         <tr key={i} className="border-b border-gray-200">
-                          <td className="p-3">
-                            <span className="font-semibold block">{u.matricula || u.vehiculo}</span>
-                            <span className="text-xs text-gray-500">{u.conductor}</span>
-                          </td>
+                          <td className="p-3 font-semibold text-center">{u.consecutivo || "N/A"}</td>
+                          <td className="p-3 font-medium">{u.conductor || "N/A"}</td>
+                          <td className="p-3 text-gray-600">{u.modelo || "N/A"}</td>
+                          <td className="p-3 font-mono">{u.matricula || "N/A"}</td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <span className="font-bold w-6 text-right">{u.totalEvents}</span>
-                              <div className="w-full bg-gray-100 h-3 flex overflow-hidden rounded-sm">
+                              <div className="w-16 bg-gray-100 h-2.5 flex overflow-hidden rounded-sm">
                                 <div className="bg-blue-500 h-full" style={{ width: `${pct}%` }}></div>
                               </div>
                             </div>
                           </td>
-                          <td className="p-3 text-xs text-gray-600" title={u.topRoutes[0]?.direccion}>
+                          <td className="p-3 text-gray-600 truncate max-w-[200px]" title={u.topRoutes[0]?.direccion}>
                             {u.topRoutes[0]?.direccion || "N/A"}
                           </td>
                         </tr>

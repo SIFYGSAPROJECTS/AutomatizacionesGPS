@@ -249,7 +249,7 @@ export function DeshorasPanel() {
       // Palabras que NO justifican por sí solas si vienen de geocercas genéricas del GPS
       const GENERIC_GEOFENCES = ["oxxo", "gasolinera", "7-eleven", "7 eleven", "super", "tienda", "domicilio"];
 
-      (stats.trips as any[]).forEach(t => {
+      (stats?.trips as any[] || []).forEach(t => {
         // 1. Justificación por Corredor Industrial (Zonas de trabajo)
         const WORK_ZONES = ["minatitlan", "minatitlán", "comalcalco", "veracruz", "boca del rio", "boca del río", "coatzacoalcos", "nanchital", "villahermosa", "chihuahua", "cadereyta"];
         const originLow = (t.origen || "").toLowerCase();
@@ -503,7 +503,7 @@ export function DeshorasPanel() {
                 <Tooltip 
                   cursor={{fill: '#18181b'}}
                   contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', color: '#fff', borderRadius: '8px' }}
-                  formatter={(value: number) => [formatMoney(value), "Deuda"]}
+                  formatter={(value: any) => [formatMoney(value || 0), "Deuda"]}
                 />
                 <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                   {top10.map((entry, index) => (

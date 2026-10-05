@@ -37,22 +37,31 @@ export async function POST(request: Request) {
     currentDict.consecutivos = mergeUnique(currentDict.consecutivos || [], newEntries.consecutivos || []);
     currentDict.vehiculos = mergeUnique(currentDict.vehiculos || [], newEntries.vehiculos || []);
 
-    // Mergear unidades relacionales por Placas (clave primaria)
+    // Mergear unidades relacionales por Placas + Mes (clave compuesta)
     const existingUnits: Map<string, any> = new Map();
     (currentDict.unidadesRelacionales || []).forEach((u: any) => {
-      existingUnits.set(u.Placas, u);
+      const key = u.Mes ? `${u.Placas.trim()}_${u.Mes.trim()}` : u.Placas.trim();
+      existingUnits.set(key, u);
     });
-    (newEntries.unidadesRelacionales || []).forEach((u) => {
+    (newEntries.unidadesRelacionales || []).forEach((u: any) => {
       if (u.Placas && u.Placas.trim()) {
-        existingUnits.set(u.Placas.trim(), {
-          Placas: u.Placas.trim(),
-          Consecutivo: u.Consecutivo?.trim() || existingUnits.get(u.Placas.trim())?.Consecutivo || "",
-          Vehículo: u.Vehículo?.trim() || existingUnits.get(u.Placas.trim())?.Vehículo || "",
+        const p = u.Placas.trim();
+        const m = u.Mes?.trim() || "";
+        const key = m ? `${p}_${m}` : p;
+        existingUnits.set(key, {
+          Placas: p,
+          Consecutivo: u.Consecutivo?.trim() || existingUnits.get(key)?.Consecutivo || "",
+          Vehículo: u.Vehículo?.trim() || existingUnits.get(key)?.Vehículo || "",
+          ...(m ? { Mes: m } : {})
         });
       }
     });
     currentDict.unidadesRelacionales = Array.from(existingUnits.values())
-      .sort((a: any, b: any) => a.Placas.localeCompare(b.Placas));
+      .sort((a: any, b: any) => {
+        const comp = a.Placas.localeCompare(b.Placas);
+        if (comp !== 0) return comp;
+        return (a.Mes || "").localeCompare(b.Mes || "");
+      });
 
     // Estadísticas de cambios
     const beforeCount = {

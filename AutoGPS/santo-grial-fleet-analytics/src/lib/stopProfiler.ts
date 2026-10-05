@@ -1,4 +1,5 @@
 import { RawTelemetryRow } from "./streaksAnalyzer";
+import { parseDateRobust } from "./utils";
 
 // ============================================================
 // STOP PROFILER — "Thermal Footprint Profiler"
@@ -98,23 +99,6 @@ export function parseDurationToSeconds(durStr: string): number {
   return 0;
 }
 
-export function parseDateRobust(dateStr: string): Date {
-  if (!dateStr) return new Date(NaN);
-  let d = new Date(dateStr);
-  if (!isNaN(d.getTime())) return d;
-  
-  const match = dateStr.trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (match) {
-    const day = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10) - 1;
-    const year = parseInt(match[3], 10);
-    const h = parseInt(match[4], 10);
-    const m = parseInt(match[5], 10);
-    const s = match[6] ? parseInt(match[6], 10) : 0;
-    return new Date(year, month, day, h, m, s);
-  }
-  return new Date("Invalid");
-}
 
 function getStopDurationSeconds(row: Record<string, string>): number {
   const durStr = getField(row, "Tiempo aparcado ", "Tiempo aparcado", "tiempo aparcado", "Duración", "Duracion", "duracion");

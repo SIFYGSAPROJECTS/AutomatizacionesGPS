@@ -186,8 +186,8 @@ export function RutasPanel() {
       const justified = new Set<string>();
       const IGNORE_GEOFENCES = ["casa", "privado", "hogar", "oxxo", "gasolinera", "7-eleven", "super", "tienda", "domicilio"];
 
-      (stats.routes as any[]).forEach(r => {
-        const anyAgg = (stats.routes as any).find((x: any) => x.routeKey === r.routeKey);
+      (stats?.routes as any[] || []).forEach(r => {
+        const anyAgg = (stats?.routes as any || []).find((x: any) => x.routeKey === r.routeKey);
         const lat = (r as any).lat;
         const lng = (r as any).lng;
 

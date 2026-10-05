@@ -26,6 +26,7 @@ interface FleetState {
   // Historial
   isHistoricalView: boolean;
   historicalLabel: string;
+  historicalId: string | null;
   
   setFleetData: (raw: RawTelemetryRow[], report: StreakReportRow[], audit: AuditTrailType) => void;
   setStreakReport: (report: StreakReportRow[]) => void;
@@ -37,9 +38,9 @@ interface FleetState {
   setWeekendReport: (report: WeekendUsageReport) => void;
   setStopReport: (report: StopProfileReport) => void;
   setTripReport: (report: TripAnalysisReport) => void;
-
+ 
   // Restaurar sesión histórica (solo rachas + auditoría)
-  restoreHistorical: (report: StreakReportRow[], audit: AuditTrailType, label: string) => void;
+  restoreHistorical: (report: StreakReportRow[], audit: AuditTrailType, label: string, id: string) => void;
   exitHistorical: () => void;
 
   // Dexie DB Persistence
@@ -66,6 +67,7 @@ export const useFleetStore = create<FleetState>((set) => ({
   tripReport: null,
   isHistoricalView: false,
   historicalLabel: "",
+  historicalId: null,
 
   globalDateRange: null,
   availableMonths: [],
@@ -76,6 +78,10 @@ export const useFleetStore = create<FleetState>((set) => ({
     auditTrail: audit,
     isHistoricalView: false,
     historicalLabel: "",
+    historicalId: null,
+    weekendReport: null,
+    stopReport: null,
+    tripReport: null,
   }),
   setStreakReport: (report) => set({ streakReport: report }),
   clearData: () => set({ 
@@ -86,6 +92,7 @@ export const useFleetStore = create<FleetState>((set) => ({
     stopReport: null,
     isHistoricalView: false,
     historicalLabel: "",
+    historicalId: null,
   }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (isOpen) => set({ sidebarOpen: isOpen }),
@@ -97,7 +104,7 @@ export const useFleetStore = create<FleetState>((set) => ({
   setStopReport: (report) => set({ stopReport: report }),
   setTripReport: (report) => set({ tripReport: report }),
 
-  restoreHistorical: (report, audit, label) => set({
+  restoreHistorical: (report, audit, label, id) => set({
     streakReport: report,
     auditTrail: audit,
     rawParsedData: null,
@@ -106,6 +113,7 @@ export const useFleetStore = create<FleetState>((set) => ({
     tripReport: null,
     isHistoricalView: true,
     historicalLabel: label,
+    historicalId: id,
   }),
   exitHistorical: () => set({
     streakReport: null,
@@ -116,6 +124,7 @@ export const useFleetStore = create<FleetState>((set) => ({
     tripReport: null,
     isHistoricalView: false,
     historicalLabel: "",
+    historicalId: null,
   }),
 
   setGlobalDateRange: (range) => set({ globalDateRange: range }),
@@ -155,13 +164,18 @@ export const useFleetStore = create<FleetState>((set) => ({
       // Reconstruimos el rawParsedData
       const rawData = events.map(e => e.rawJson);
       
-      // Limpiamos reportes para forzar su regeneración en los paneles
+      const isHistorical = useFleetStore.getState().isHistoricalView;
+
+      // Limpiamos reportes para forzar su regeneración SOLO si no estamos en vista histórica
+      // (Si es histórica, queremos preservar lo que restauramos del snapshot)
       set({ 
         rawParsedData: rawData,
-        streakReport: null,
-        weekendReport: null,
-        stopReport: null,
-        tripReport: null,
+        ...(isHistorical ? {} : {
+          streakReport: null,
+          weekendReport: null,
+          stopReport: null,
+          tripReport: null,
+        })
       });
     } catch (e) {
       console.error("Error loading data from DB:", e);
