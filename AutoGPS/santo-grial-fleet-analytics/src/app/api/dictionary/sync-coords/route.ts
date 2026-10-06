@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { db } from '@/lib/pg';
 import { NextResponse } from 'next/server';
 import { normalizeLocationName } from '@/lib/utils';
 
@@ -9,7 +9,6 @@ import { normalizeLocationName } from '@/lib/utils';
  */
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
     const { locations } = await request.json(); // Array de { name, lat, lng }
 
     if (!Array.isArray(locations)) {
@@ -17,19 +16,34 @@ export async function POST(request: Request) {
     }
 
     // Normalizar nombres antes de guardar para evitar duplicados por minúsculas/acentos
-    const records = locations.map(loc => ({
-      name_key: normalizeLocationName(loc.name),
-      display_name: loc.name,
-      lat: loc.lat,
-      lng: loc.lng,
-      last_updated: new Date().toISOString()
-    })).filter(loc => loc.name_key && loc.lat && loc.lng);
+    const deduped = new Map<string, { name_key: string; display_name: string; lat: number; lng: number }>();
+    for (const loc of locations) {
+      const name_key = normalizeLocationName(loc.name);
+      if (name_key && loc.lat && loc.lng) {
+        deduped.set(name_key, { name_key, display_name: loc.name, lat: loc.lat, lng: loc.lng });
+      }
+    }
+    const records = Array.from(deduped.values());
+    if (records.length === 0) return NextResponse.json({ success: true, count: 0 });
 
-    const { data, error } = await supabase
-      .from('site_geography')
-      .upsert(records, { onConflict: 'name_key' });
+    const pool = await db();
+    const values: any[] = [];
+    const placeholders = records.map((r, i) => {
+      values.push(r.name_key, r.display_name, r.lat, r.lng);
+      const b = i * 4;
+      return `($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4}, NOW())`;
+    });
 
-    if (error) throw error;
+    await pool.query(
+      `INSERT INTO site_geography (name_key, display_name, lat, lng, last_updated)
+       VALUES ${placeholders.join(', ')}
+       ON CONFLICT (name_key) DO UPDATE SET
+         display_name = EXCLUDED.display_name,
+         lat = EXCLUDED.lat,
+         lng = EXCLUDED.lng,
+         last_updated = NOW()`,
+      values
+    );
 
     return NextResponse.json({ success: true, count: records.length });
   } catch (error: any) {

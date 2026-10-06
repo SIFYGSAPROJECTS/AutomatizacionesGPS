@@ -12,7 +12,6 @@ import { useAnalysisHistory } from "@/hooks/useAnalysisHistory";
 import { importRawTelemetry, clearAllTelemetry } from "@/lib/db";
 import { parseNavixyReport } from "@/lib/navixyXlsxParser";
 import { getFileHash, normalizeLocationName, parseDateRobust } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/client";
 import { 
   getVehicleEquipment, 
   updateVehicleEquipmentOverride, 

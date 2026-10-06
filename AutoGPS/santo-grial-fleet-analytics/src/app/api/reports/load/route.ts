@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { db } from '@/lib/pg';
 import { NextResponse } from 'next/server';
 
 /**
@@ -6,43 +6,32 @@ import { NextResponse } from 'next/server';
  */
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const pool = await db();
     const { searchParams } = new URL(request.url);
     const hash = searchParams.get('hash');
     const month = searchParams.get('month');
 
     if (hash) {
-      const { data, error } = await supabase
-        .from('analysis_reports')
-        .select('*')
-        .eq('id', hash)
-        .single();
-        
-      if (error) throw error;
-      return NextResponse.json(data);
+      const { rows } = await pool.query('SELECT * FROM analysis_reports WHERE id = $1', [hash]);
+      if (rows.length === 0) {
+        return NextResponse.json({ error: 'Reporte no encontrado' }, { status: 404 });
+      }
+      return NextResponse.json(rows[0]);
     }
 
-    let query = supabase.from('analysis_reports').select('*');
-
     if (month) {
-      const { data, error } = await query
-        .eq('month', month)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      return NextResponse.json(data);
+      const { rows } = await pool.query(
+        'SELECT * FROM analysis_reports WHERE month = $1 ORDER BY created_at DESC',
+        [month]
+      );
+      return NextResponse.json(rows);
     }
 
     // Listar últimos 20 análisis si no hay month ni hash
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (error) throw error;
-
-    return NextResponse.json(data);
+    const { rows } = await pool.query('SELECT * FROM analysis_reports ORDER BY created_at DESC LIMIT 20');
+    return NextResponse.json(rows);
   } catch (error: any) {
-    console.error("Error loading reports from Supabase:", error);
+    console.error("Error loading reports from Postgres:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
