@@ -12,16 +12,18 @@ import { PernoctasScanner } from "./PernoctasScanner";
 import { UbicacionesPanel } from "./UbicacionesPanel";
 import { BasesPanel } from "./BasesPanel";
 import { UltimaPosicionPanel } from "./UltimaPosicionPanel";
-import { FileBarChart, Navigation, BadgeDollarSign, Map, Home, MapPin as MapPinIcon } from "lucide-react";
+import { CiclosBasePanel } from "./CiclosBasePanel";
+import { FileBarChart, Navigation, BadgeDollarSign, Map, Home, MapPin as MapPinIcon, Route } from "lucide-react";
 import { TimelineSlider } from "@/components/TimelineSlider";
 
-type AuditTab = "forense" | "finsemana" | "pernoctas" | "rutas" | "deshoras" | "reportes" | "ultimapos";
+type AuditTab = "forense" | "finsemana" | "pernoctas" | "rutas" | "deshoras" | "ciclos" | "ultimapos" | "reportes";
 
 const TABS: { key: AuditTab; label: string; icon: any; description: string }[] = [
   { key: "forense", label: "Forense", icon: ShieldAlert, description: "Rachas de permanencia y auditoría por vehículo/geocerca" },
   { key: "finsemana", label: "Fin de Semana", icon: Calendar, description: "Alertas de uso no autorizado en sábados y domingos" },
   { key: "pernoctas", label: "Pernoctas", icon: Moon, description: "Escáner nocturno por unidad: Validado vs Desconocido" },
   { key: "rutas", label: "Rutas", icon: Navigation, description: "Análisis de trayectos, origen-destino y duración de viajes" },
+  { key: "ciclos", label: "Ciclos de Base", icon: Route, description: "Pipeline ETL: Ciclos Base ↔ Base, tiempos muertos, destinos y exportación a Word (.docx)" },
   { key: "deshoras", label: "Deshoras", icon: BadgeDollarSign, description: "Auditoría de cobros por uso de vehículos fuera de horario laboral" },
   { key: "ultimapos", label: "Última Posición", icon: MapPinIcon, description: "Instantánea en vivo de la última ubicación conocida de cada unidad" },
   { key: "reportes", label: "Reportes", icon: FileBarChart, description: "Generador de reportes ejecutivos en PPTX y operacionales en Excel" },
@@ -80,9 +82,10 @@ export default function AuditoriaPage() {
           {activeTab === "finsemana" && <FinDeSemanaPanel />}
           {activeTab === "pernoctas" && <PernoctasScanner />}
           {activeTab === "rutas" && <RutasPanel />}
-          { activeTab === "deshoras" && <DeshorasPanel />}
-          { activeTab === "ultimapos" && <UltimaPosicionPanel />}
-          { activeTab === "reportes" && <ReportesPanel />}
+          {activeTab === "ciclos" && <CiclosBasePanel />}
+          {activeTab === "deshoras" && <DeshorasPanel />}
+          {activeTab === "ultimapos" && <UltimaPosicionPanel />}
+          {activeTab === "reportes" && <ReportesPanel />}
         </div>
     </div>
   );
